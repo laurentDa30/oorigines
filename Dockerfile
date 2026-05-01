@@ -38,4 +38,4 @@ RUN chmod -R 775 storage bootstrap/cache
 
 EXPOSE 8000
 
-CMD sh -c "touch database/database.sqlite && php artisan migrate --force && php artisan storage:link --force && php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan serve --host=0.0.0.0 --port=${PORT:-8000}"
+CMD sh -c "touch database/database.sqlite; php artisan migrate --force; php artisan storage:link --force; php artisan config:cache; php artisan route:cache; php artisan view:cache; exec php artisan serve --host=0.0.0.0 --port=${PORT:-8000}"
