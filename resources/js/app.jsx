@@ -436,7 +436,7 @@ function PageCourseDetail({ race, navigate }) {
               </div>
             )}
             <div style={{marginTop:32}}>
-              <div className="sec-tag">Profil altimétrique</div>
+              <div className="sec-tag">Profil</div>
               <div style={{background:'white',border:'1px solid var(--stone)',padding:'16px 16px 8px'}}>
                 <ProfilSVG points={race.profil} color={race.color}/>
                 <div style={{display:'flex',justifyContent:'space-between',paddingTop:4}}>
@@ -860,7 +860,7 @@ function PageContact({ navigate }) {
             <div style={{borderTop:'1px solid var(--stone)',paddingTop:20}}>
               <div style={{fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:'.3em',textTransform:'uppercase',color:'var(--tc)',marginBottom:12}}>Réseaux sociaux</div>
               <div className="social-row">
-                <a href="https://www.facebook.com/LeVallondEscaunesaCantarelles" aria-label="Facebook" style={{display:'flex',alignItems:'center',justifyContent:'center',width:44,height:44,background:'#1877F2',borderRadius:'50%'}}>
+                <a href="https://www.facebook.com/assoc.sms" aria-label="Facebook" style={{display:'flex',alignItems:'center',justifyContent:'center',width:44,height:44,background:'#1877F2',borderRadius:'50%'}}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
                 </a>
               </div>
