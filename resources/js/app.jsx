@@ -231,8 +231,8 @@ function PageAccueil({ navigate }) {
         </div>
       </div>
 
-      <div style={{background:'var(--paper)',padding:'72px 48px'}}>
-        <div style={{maxWidth:1160,margin:'0 auto',display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:32,textAlign:'center'}}>
+      <div style={{background:'var(--paper)',padding:'clamp(40px,6vw,72px) clamp(20px,4vw,48px)'}}>
+        <div className="stats-grid">
           {[['4','Épreuves','Du trail 20km à la course enfants'],[ARTISAN_COUNT||'–','Artisans','Marché de créateurs et producteurs locaux'],['1','Journée','Un événement convivial, festif et authentique']].map(([n,t,d])=>(
             <div key={t} style={{padding:'32px 24px',borderTop:'3px solid var(--tc)'}}>
               <div style={{fontFamily:"'Cinzel',serif",fontSize:'clamp(40px,5vw,64px)',fontWeight:900,color:'var(--tc)',lineHeight:1,marginBottom:8}}>{n}</div>
@@ -301,8 +301,8 @@ function PageEvenement({ navigate }) {
           ))}
         </div>
       </div>
-      <div style={{background:'var(--dark)',padding:'72px 48px'}}>
-        <div style={{maxWidth:1160,margin:'0 auto',display:'grid',gridTemplateColumns:'1fr 1fr',gap:48,alignItems:'center'}}>
+      <div style={{background:'var(--dark)',padding:'clamp(40px,6vw,72px) clamp(20px,4vw,48px)'}}>
+        <div className="dark-split">
           <img src="/images/depart.jpg" alt="Départ de course" style={{width:'100%',height:380,objectFit:'cover'}} loading="lazy"/>
           <div>
             <div className="sec-tag">L'Atmosphère</div>
@@ -313,7 +313,7 @@ function PageEvenement({ navigate }) {
           </div>
         </div>
       </div>
-      <div style={{background:'var(--paper)',borderTop:'1px solid var(--stone)',padding:'40px 48px',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:24}}>
+      <div style={{background:'var(--paper)',borderTop:'1px solid var(--stone)',padding:'clamp(24px,4vw,40px) clamp(20px,4vw,48px)',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:24}}>
         <div>
           <div className="sec-tag">Préparez votre venue</div>
           <div style={{fontFamily:"'Cinzel',serif",fontSize:'clamp(16px,2vw,22px)',fontWeight:700,color:'var(--dark)'}}>Accès · Parking · Dossards · Infos pratiques</div>
@@ -397,7 +397,7 @@ function PageCourseDetail({ race, navigate }) {
     <>
       <div style={{background:'var(--dark2)',paddingTop:68,paddingBottom:0,position:'relative',overflow:'hidden'}}>
         <div style={{position:'absolute',inset:0,backgroundImage:"url('/images/hero.jpg')",backgroundSize:'cover',backgroundPosition:'center 40%',opacity:.18}}/>
-        <div style={{position:'relative',maxWidth:1160,margin:'0 auto',padding:'48px 48px 0'}}>
+        <div style={{position:'relative',maxWidth:1160,margin:'0 auto',padding:'clamp(28px,4vw,48px) clamp(20px,4vw,48px) 0'}}>
           <button onClick={()=>navigate('courses')} style={{fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:'.3em',textTransform:'uppercase',color:'var(--stone)',background:'none',border:'none',cursor:'pointer',marginBottom:24,display:'flex',alignItems:'center',gap:8}}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
             Toutes les courses
@@ -412,7 +412,7 @@ function PageCourseDetail({ race, navigate }) {
           </div>
         </div>
         <div style={{background:'oklch(12% .03 38 / .85)',borderTop:'1px solid oklch(25% .04 38)'}}>
-          <div style={{maxWidth:1160,margin:'0 auto',padding:'0 48px',display:'flex',flexWrap:'wrap'}}>
+          <div style={{maxWidth:1160,margin:'0 auto',padding:'0 clamp(20px,4vw,48px)',display:'flex',flexWrap:'wrap'}}>
             {[['Distance',race.distance],['Dénivelé',race.denivele],['Départ',race.depart],['Arrivée estimée',race.arrivee],['Tarif',race.tarif],['Limite',race.limite]].map(([l,v])=>(
               <div key={l} style={{padding:'18px 28px 18px 0',marginRight:28,borderRight:'1px solid oklch(25% .04 38)',display:'flex',flexDirection:'column',gap:4}}>
                 <div style={{fontFamily:"'Cinzel',serif",fontSize:9,letterSpacing:'.3em',textTransform:'uppercase',color:'oklch(50% .03 68)'}}>{l}</div>
@@ -422,8 +422,8 @@ function PageCourseDetail({ race, navigate }) {
           </div>
         </div>
       </div>
-      <div style={{maxWidth:1160,margin:'0 auto',padding:'56px 48px'}}>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:52,alignItems:'start'}}>
+      <div style={{maxWidth:1160,margin:'0 auto',padding:'clamp(32px,5vw,56px) clamp(20px,4vw,48px)'}}>
+        <div className="detail-grid">
           <div>
             <div className="sec-tag">Description</div>
             <h2 className="sec-title" style={{fontSize:'clamp(22px,3vw,34px)'}}>Le <em>parcours</em></h2>
@@ -623,7 +623,7 @@ function PageVallon() {
         </div>
         <div style={{marginBottom:64}}>
           <div style={{position:'relative',zIndex:0,isolation:'isolate'}}>
-            <div ref={mapRef} style={{width:'100%',height:460,border:'1px solid var(--stone)'}}/>
+            <div ref={mapRef} className="map-container"/>
           </div>
           <div style={{display:'flex',gap:20,marginTop:12,flexWrap:'wrap'}}>
             {TRAILS.map(t=><div key={t.id} style={{display:'flex',alignItems:'center',gap:6,fontSize:13}}><div style={{width:24,height:3,background:t.color,borderRadius:2}}/>{t.name}</div>)}
@@ -631,7 +631,7 @@ function PageVallon() {
           </div>
           <p style={{fontSize:13,color:'oklch(55% .03 68)',marginTop:8,fontStyle:'italic'}}>Les tracés sont indicatifs. Retrouver les parcours officiels et balisés sur le site de l'association</p>
         </div>
-        <div style={{background:'var(--dark)',padding:'48px',marginBottom:64,display:'flex',gap:40,alignItems:'center',flexWrap:'wrap'}}>
+        <div style={{background:'var(--dark)',padding:'clamp(28px,4vw,48px)',marginBottom:64,display:'flex',gap:40,alignItems:'center',flexWrap:'wrap'}}>
           <div style={{flex:1,minWidth:240}}>
             <div style={{fontFamily:'var(--ff)',fontSize:10,letterSpacing:'.4em',textTransform:'uppercase',color:'var(--tc)',marginBottom:16}}>Partenaire du site</div>
             <h3 style={{fontFamily:'var(--ff)',fontSize:'clamp(18px,2.5vw,28px)',color:'white',marginBottom:16,lineHeight:1.2}}>Le Vallon d'Escaunes<br/><em style={{color:'var(--tc)',fontStyle:'normal'}}>à Cantarelles</em></h3>
@@ -641,7 +641,7 @@ function PageVallon() {
               <a href="https://www.facebook.com/LeVallondEscaunesaCantarelles" target="_blank" rel="noopener noreferrer" style={{fontFamily:'var(--ff)',fontSize:10,letterSpacing:'.2em',textTransform:'uppercase',background:'none',color:'white',border:'1px solid oklch(40% .04 38)',padding:'12px 28px',textDecoration:'none',display:'inline-block'}}>Facebook</a>
             </div>
           </div>
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,flex:'0 0 auto'}}>
+          <div className="vallon-assoc">
             {[['Restaurer','Remettre en état les terrasses'],['Préserver','Protéger la biodiversité'],['Animer','Fête du Vallon, visites guidées'],['Impliquer','Bénévolat, scolaires, familles']].map(([m,d])=>(
               <div key={m} style={{background:'oklch(14% .04 38)',padding:'16px',minWidth:140}}>
                 <div style={{fontFamily:'var(--ff)',fontSize:10,letterSpacing:'.2em',textTransform:'uppercase',color:'var(--tc)',marginBottom:6}}>{m}</div>
@@ -667,7 +667,7 @@ function PageArtisans({ navigate }) {
             <p className="body">õ origines accueille un marché d'artisans locaux au cœur du Vallon. Potiers, tisserands, producteurs du terroir... Tous partagent un même attachement au savoir-faire authentique et à la création manuelle.</p>
             <p className="body">Dans l'esprit de la tradition romaine, les artisans proposeront leurs créations dans un cadre évocateur, entre les oliviers et les falaises calcaires.</p>
           </div>
-          <div style={{background:'var(--paper)',padding:'36px',borderLeft:'4px solid var(--tc)'}}>
+          <div style={{background:'var(--paper)',padding:'clamp(20px,3vw,36px)',borderLeft:'4px solid var(--tc)'}}>
             <div style={{fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:'.4em',textTransform:'uppercase',color:'var(--tc)',marginBottom:18}}>Vous êtes artisan ?</div>
             <p className="body" style={{marginBottom:20}}>Les emplacements sont gratuits pour les artisans de la région gardoise. Rejoignez l'édition 2027.</p>
             <button className="btn-primary" onClick={()=>navigate('contact')}>Réserver un emplacement</button>
@@ -934,7 +934,7 @@ function PageInfos({ navigate }) {
 
   return (
     <>
-      <div style={{height:280,position:'relative',overflow:'hidden'}}>
+      <div style={{height:'clamp(180px,35vw,280px)',position:'relative',overflow:'hidden'}}>
         <div className="hero-bg" style={{backgroundImage:"url('/images/vallon.jpg')",position:'absolute',inset:0,filter:'brightness(.35) saturate(1.1)',backgroundAttachment:'fixed'}}/>
 
         <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',paddingTop:68}}>
@@ -950,7 +950,7 @@ function PageInfos({ navigate }) {
             <div style={{fontFamily:"'Cinzel',serif",fontSize:11,letterSpacing:'.3em',textTransform:'uppercase',color:'var(--tc)',marginBottom:4}}>Édition 2027</div>
             <div style={{fontFamily:"'Cinzel',serif",fontSize:15,fontWeight:700,color:'var(--dark)'}}>Samedi 24 avril 2027 · Vallon de Sernhac · 30210 Sernhac (Gard)</div>
           </div>
-          <button className="btn-primary" style={{marginLeft:'auto'}} onClick={()=>navigate('contact')}>Une question ? →</button>
+          <button className="btn-primary" onClick={()=>navigate('contact')}>Une question ? →</button>
         </div>
 
         <div style={{display:'flex',flexDirection:'column',gap:0}}>
@@ -961,7 +961,7 @@ function PageInfos({ navigate }) {
                 <span style={{fontFamily:"'Cinzel',serif",fontSize:11,letterSpacing:'.28em',textTransform:'uppercase',color:'var(--dark)',fontWeight:700}}>{s.titre}</span>
               </div>
               {s.items.map(([label,texte],i)=>(
-                <div key={label} style={{display:'grid',gridTemplateColumns:'180px 1fr',gap:'12px 32px',padding:'16px 28px',borderBottom:i<s.items.length-1?'1px solid oklch(95% .005 38)':'none',alignItems:'baseline'}}>
+                <div key={label} className="info-item-row" style={{borderBottom:i<s.items.length-1?'1px solid oklch(95% .005 38)':'none'}}>
                   <div style={{fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:'.2em',textTransform:'uppercase',color:s.couleur,lineHeight:1.5,paddingTop:2}}>{label}</div>
                   <div style={{fontFamily:"'EB Garamond',serif",fontSize:16.5,color:'oklch(28% .04 38)',lineHeight:1.7}}>{texte}</div>
                 </div>
@@ -970,7 +970,7 @@ function PageInfos({ navigate }) {
           ))}
         </div>
 
-        <div style={{marginTop:52,background:'var(--dark)',padding:'40px 48px',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:24}}>
+        <div style={{marginTop:52,background:'var(--dark)',padding:'clamp(28px,4vw,40px) clamp(20px,4vw,48px)',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:24}}>
           <div>
             <div style={{fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:'.4em',textTransform:'uppercase',color:'var(--tc)',marginBottom:10}}>Encore des questions ?</div>
             <div style={{fontFamily:"'Cinzel',serif",fontSize:'clamp(16px,2vw,22px)',color:'white',fontWeight:700}}>L'organisation est disponible pour vous aider.</div>
