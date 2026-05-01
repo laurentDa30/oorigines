@@ -97,6 +97,23 @@ function IntroScreen({ onEnter }) {
   );
 }
 
+/* ── Top Bar ─── */
+function TopBar({ navigate }) {
+  return (
+    <div className="top-bar">
+      <div className="top-bar-social">
+        <a href="https://www.facebook.com/assoc.sms" target="_blank" rel="noopener noreferrer" className="top-bar-icon" aria-label="Facebook">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+        </a>
+        <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" className="top-bar-icon" aria-label="Instagram">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+        </a>
+      </div>
+      <button className="top-bar-cta" onClick={()=>navigate('courses')}>Je m'inscris →</button>
+    </div>
+  );
+}
+
 /* ── Nav ─── */
 function Nav({ navigate, menuOpen, setMenuOpen }) {
   const [scrolled, setScrolled] = useState(false);
@@ -121,25 +138,26 @@ function Nav({ navigate, menuOpen, setMenuOpen }) {
     ['partenaires',"Partenaires",null],
     ['contact',"Contact",null],
   ];
+  const linksLeft  = links.slice(0,4);
+  const linksRight = links.slice(4);
+  const renderLink = ([id,lbl,sub]) => (
+    <li key={id} className={sub?'has-sub':''}>
+      <a onClick={()=>{ if(!sub) go(id); }} style={sub?{cursor:'default'}:{}}>{lbl}{sub&&<span className="nav-chevron">▾</span>}</a>
+      {sub&&(
+        <ul className="sub-nav">
+          {sub.map(([sid,slbl])=>(
+            <li key={sid}><a onClick={e=>{e.stopPropagation();go(sid);}}>{slbl}</a></li>
+          ))}
+        </ul>
+      )}
+    </li>
+  );
   return (
     <>
       <nav className={scrolled?'scrolled':''}>
+        <ul className="nav-links nav-links-left">{linksLeft.map(renderLink)}</ul>
         <div className="nav-logo" onClick={()=>go('accueil')}><em>õ</em> origines</div>
-        <ul className="nav-links">
-          {links.map(([id,lbl,sub])=>(
-            <li key={id} className={sub?'has-sub':''}>
-              <a onClick={()=>{ if(!sub) go(id); }} style={sub?{cursor:'default'}:{}}>{lbl}{sub&&<span className="nav-chevron">▾</span>}</a>
-              {sub&&(
-                <ul className="sub-nav">
-                  {sub.map(([sid,slbl])=>(
-                    <li key={sid}><a onClick={e=>{e.stopPropagation();go(sid);}}>{slbl}</a></li>
-                  ))}
-                </ul>
-              )}
-            </li>
-          ))}
-        </ul>
-        <button className="nav-cta" onClick={()=>go('courses')}>S'inscrire</button>
+        <ul className="nav-links nav-links-right">{linksRight.map(renderLink)}</ul>
         <button className="hamburger" onClick={()=>setMenuOpen(o=>!o)}><span/><span/><span/></button>
       </nav>
       <div className={`mobile-menu ${menuOpen?'open':''}`}>
@@ -265,7 +283,7 @@ function PageEvenement({ navigate }) {
       <div style={{height:320,position:'relative',overflow:'hidden'}}>
         <div className="hero-bg" style={{backgroundImage:"url('/images/vallon.jpg')",position:'absolute',inset:0,filter:'brightness(.42)'}}/>
 
-        <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',paddingTop:68}}>
+        <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',paddingTop:112}}>
           <div className="hero-eyebrow">L'Événement</div>
           <h1 className="hero-title" style={{fontSize:'clamp(40px,7vw,90px)'}}><em>õ</em> origines</h1>
         </div>
@@ -395,7 +413,7 @@ function PageCourseDetail({ race, navigate }) {
   const DotIcon   = ()=><svg width="10" height="10" viewBox="0 0 10 10" style={{flexShrink:0,marginTop:4}} fill={race.color}><circle cx="5" cy="5" r="4"/></svg>;
   return (
     <>
-      <div style={{background:'var(--dark2)',paddingTop:68,paddingBottom:0,position:'relative',overflow:'hidden'}}>
+      <div style={{background:'var(--dark2)',paddingTop:112,paddingBottom:0,position:'relative',overflow:'hidden'}}>
         <div style={{position:'absolute',inset:0,backgroundImage:"url('/images/hero.jpg')",backgroundSize:'cover',backgroundPosition:'center 40%',opacity:.18}}/>
         <div style={{position:'relative',maxWidth:1160,margin:'0 auto',padding:'clamp(28px,4vw,48px) clamp(20px,4vw,48px) 0'}}>
           <button onClick={()=>navigate('courses')} style={{fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:'.3em',textTransform:'uppercase',color:'var(--stone)',background:'none',border:'none',cursor:'pointer',marginBottom:24,display:'flex',alignItems:'center',gap:8}}>
@@ -488,7 +506,7 @@ function PageCourseDetail({ race, navigate }) {
 function PageCourses({ navigate }) {
   return (
     <>
-      <div className="wrap" style={{paddingTop:120}}>
+      <div className="wrap" style={{paddingTop:164}}>
         <div className="sec-tag">Les Épreuves</div>
         <h2 className="sec-title">Les <em>Courses</em></h2>
         <div className="sec-rule"/>
@@ -517,7 +535,7 @@ function PageCourses({ navigate }) {
 function PagePartenaires({ navigate }) {
   return (
     <>
-      <div className="wrap" style={{paddingTop:120}}>
+      <div className="wrap" style={{paddingTop:164}}>
         <div className="sec-tag">Soutenir l'événement</div>
         <h2 className="sec-title">Devenir <em>Partenaire</em></h2>
         <div className="sec-rule"/>
@@ -583,7 +601,7 @@ function PageVallon() {
       <div style={{height:300,position:'relative',overflow:'hidden'}}>
         <div className="hero-bg" style={{backgroundImage:"url('/images/depart.jpg')",position:'absolute',inset:0,filter:'brightness(.38) saturate(1.1)'}}/>
 
-        <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',paddingTop:68}}>
+        <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',paddingTop:112}}>
           <div className="hero-eyebrow">Notre terrain de jeu</div>
           <h1 className="hero-title" style={{fontSize:'clamp(36px,6vw,80px)'}}>Le <em>Vallon</em> de Sernhac</h1>
         </div>
@@ -658,7 +676,7 @@ function PageVallon() {
 function PageArtisans({ navigate }) {
   return (
     <>
-      <div className="wrap" style={{paddingTop:120}}>
+      <div className="wrap" style={{paddingTop:164}}>
         <div className="sec-tag">Le Marché</div>
         <h2 className="sec-title">Les <em>Artisans</em></h2>
         <div className="sec-rule"/>
@@ -718,7 +736,7 @@ function PageGalerie({ navigate }) {
 
   return (
     <>
-      <div className="wrap" style={{paddingTop:120}}>
+      <div className="wrap" style={{paddingTop:164}}>
         <div className="sec-tag">Souvenirs</div>
         <h2 className="sec-title">La <em>Galerie</em></h2>
         <div className="sec-rule"/>
@@ -820,7 +838,7 @@ function PageContact({ navigate }) {
 
   return (
     <>
-      <div className="wrap" style={{paddingTop:120}}>
+      <div className="wrap" style={{paddingTop:164}}>
         <div className="sec-tag">Nous écrire</div>
         <h2 className="sec-title">Nous <em>Contacter</em></h2>
         <div className="sec-rule"/>
@@ -937,7 +955,7 @@ function PageInfos({ navigate }) {
       <div style={{height:'clamp(180px,35vw,280px)',position:'relative',overflow:'hidden'}}>
         <div className="hero-bg" style={{backgroundImage:"url('/images/vallon.jpg')",position:'absolute',inset:0,filter:'brightness(.35) saturate(1.1)',backgroundAttachment:'fixed'}}/>
 
-        <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',paddingTop:68}}>
+        <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',paddingTop:112}}>
           <div className="hero-eyebrow">Pratique</div>
           <h1 className="hero-title" style={{fontSize:'clamp(28px,5vw,64px)'}}>Informations <em>essentielles</em></h1>
         </div>
@@ -1007,6 +1025,7 @@ function App() {
   if(showIntro) return <IntroScreen onEnter={enterSite}/>;
   return (
     <div className="site">
+      <TopBar navigate={navigate}/>
       <Nav navigate={navigate} menuOpen={menuOpen} setMenuOpen={setMenuOpen}/>
       {page==='accueil'     && <PageAccueil     navigate={navigate}/>}
       {page==='evenement'   && <PageEvenement   navigate={navigate}/>}
