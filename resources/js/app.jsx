@@ -156,7 +156,9 @@ function Nav({ navigate, menuOpen, setMenuOpen }) {
     <>
       <nav className={scrolled?'scrolled':''}>
         <ul className="nav-links nav-links-left">{linksLeft.map(renderLink)}</ul>
-        <div className="nav-logo" onClick={()=>go('accueil')}><em>õ</em> origines</div>
+        <div className="nav-logo" onClick={()=>go('accueil')}>
+          <img src="/images/logo/logo-preview.png" alt="õ origines" style={{height:48,width:'auto',display:'block'}}/>
+        </div>
         <ul className="nav-links nav-links-right">{linksRight.map(renderLink)}</ul>
         <button className="hamburger" onClick={()=>setMenuOpen(o=>!o)}><span/><span/><span/></button>
       </nav>
