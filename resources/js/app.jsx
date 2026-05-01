@@ -203,7 +203,7 @@ function PageAccueil({ navigate }) {
             <div className="hero-date-item"><span className="hero-date-val">Trail</span><span className="hero-date-lbl">COURSES NATURE</span></div>
           </div>
           <div className="hero-actions">
-            <button className="btn-primary" onClick={()=>navigate('courses')}>S'inscrire aux courses</button>
+            <button className="btn-primary" onClick={()=>navigate('courses')}>Découvrir les courses</button>
             <button className="btn-ghost"   onClick={()=>navigate('evenement')}>Découvrir l'événement</button>
           </div>
         </motion.div>
@@ -301,10 +301,10 @@ function PageEvenement({ navigate }) {
           ))}
         </div>
       </div>
-      <div style={{background:'var(--dark)',padding:'clamp(40px,6vw,72px) clamp(20px,4vw,48px)'}}>
-        <div className="dark-split">
-          <img src="/images/depart.jpg" alt="Départ de course" style={{width:'100%',height:380,objectFit:'cover'}} loading="lazy"/>
-          <div>
+      <div className="parallax-bg" style={{backgroundImage:"url('/images/depart.jpg')",padding:'clamp(80px,12vw,140px) clamp(20px,4vw,48px)'}}>
+        <div style={{position:'absolute',inset:0,background:'oklch(8% .03 38 / .60)'}}/>
+        <div style={{position:'relative',maxWidth:1160,margin:'0 auto',display:'flex',justifyContent:'flex-end'}}>
+          <div style={{background:'oklch(10% .04 38 / .92)',padding:'clamp(28px,4vw,52px)',maxWidth:560,borderLeft:'4px solid var(--tc)',width:'100%'}}>
             <div className="sec-tag">L'Atmosphère</div>
             <h2 className="sec-title" style={{color:'var(--cream)'}}>Là où l'histoire <em>se court</em></h2>
             <div className="sec-rule"/>
