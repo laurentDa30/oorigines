@@ -9,6 +9,7 @@
   <meta property="og:type" content="website">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>õ origines – Sernhac 2027</title>
+  <link rel="preload" as="image" href="/images/hero.jpg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
