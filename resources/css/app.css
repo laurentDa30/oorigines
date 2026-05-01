@@ -82,7 +82,15 @@ nav.scrolled { background:var(--dark2); box-shadow:0 2px 24px oklch(5% .02 38 / 
 .mobile-menu.open { display:flex; }
 .mobile-menu a { font-family:var(--ff); font-size:18px; letter-spacing:.3em; text-transform:uppercase; color:white; text-decoration:none; cursor:pointer; user-select:none; }
 .mobile-menu a:hover { color:var(--ocre); }
-@media(max-width:900px){ .nav-links-left,.nav-links-right{display:none!important;} .hamburger{display:flex;} .top-bar{padding:0 20px;} }
+@media(max-width:900px){
+  .nav-links-left,.nav-links-right{display:none!important;}
+  .hamburger{display:flex;}
+  .top-bar{padding:0 20px;}
+  nav { display:flex; justify-content:space-between; align-items:center; }
+  .hamburger { position:static; order:0; }
+  .nav-logo { order:1; }
+  .nav-logo img { height:48px !important; }
+}
 
 /* ── HERO ─── */
 .hero { height:100vh; min-height:620px; position:relative; display:flex; align-items:center; justify-content:center; text-align:center; overflow:hidden; }
