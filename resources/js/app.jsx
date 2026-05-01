@@ -128,7 +128,7 @@ function Nav({ navigate, menuOpen, setMenuOpen }) {
         <ul className="nav-links">
           {links.map(([id,lbl,sub])=>(
             <li key={id} className={sub?'has-sub':''}>
-              <a onClick={()=>go(id)}>{lbl}{sub&&<span className="nav-chevron">▾</span>}</a>
+              <a onClick={()=>{ if(!sub) go(id); }} style={sub?{cursor:'default'}:{}}>{lbl}{sub&&<span className="nav-chevron">▾</span>}</a>
               {sub&&(
                 <ul className="sub-nav">
                   {sub.map(([sid,slbl])=>(
@@ -301,9 +301,9 @@ function PageEvenement({ navigate }) {
           ))}
         </div>
       </div>
-      <div className="parallax-bg" style={{backgroundImage:"url('/images/depart.jpg')",padding:'clamp(80px,12vw,140px) clamp(20px,4vw,48px)'}}>
+      <div className="parallax-bg" style={{backgroundImage:"url('/images/depart.jpg')",minHeight:530,padding:'clamp(40px,6vw,80px) clamp(20px,4vw,48px)',display:'flex',alignItems:'center'}}>
         <div style={{position:'absolute',inset:0,background:'oklch(8% .03 38 / .60)'}}/>
-        <div style={{position:'relative',maxWidth:1160,margin:'0 auto',display:'flex',justifyContent:'flex-end'}}>
+        <div style={{position:'relative',maxWidth:1160,margin:'0 auto',display:'flex',justifyContent:'flex-end',width:'100%'}}>
           <div style={{background:'oklch(10% .04 38 / .92)',padding:'clamp(28px,4vw,52px)',maxWidth:560,borderLeft:'4px solid var(--tc)',width:'100%'}}>
             <div className="sec-tag">L'Atmosphère</div>
             <h2 className="sec-title" style={{color:'var(--cream)'}}>Là où l'histoire <em>se court</em></h2>
