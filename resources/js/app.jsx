@@ -264,7 +264,7 @@ function PageEvenement({ navigate }) {
     <>
       <div style={{height:320,position:'relative',overflow:'hidden'}}>
         <div className="hero-bg" style={{backgroundImage:"url('/images/vallon.jpg')",position:'absolute',inset:0,filter:'brightness(.42)'}}/>
-        <div className="hero-overlay" style={{position:'absolute',inset:0}}/>
+
         <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',paddingTop:68}}>
           <div className="hero-eyebrow">L'Événement</div>
           <h1 className="hero-title" style={{fontSize:'clamp(40px,7vw,90px)'}}><em>õ</em> origines</h1>
@@ -582,7 +582,7 @@ function PageVallon() {
     <>
       <div style={{height:300,position:'relative',overflow:'hidden'}}>
         <div className="hero-bg" style={{backgroundImage:"url('/images/depart.jpg')",position:'absolute',inset:0,filter:'brightness(.38) saturate(1.1)'}}/>
-        <div className="hero-overlay" style={{position:'absolute',inset:0}}/>
+
         <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',paddingTop:68}}>
           <div className="hero-eyebrow">Notre terrain de jeu</div>
           <h1 className="hero-title" style={{fontSize:'clamp(36px,6vw,80px)'}}>Le <em>Vallon</em> de Sernhac</h1>
@@ -936,7 +936,7 @@ function PageInfos({ navigate }) {
     <>
       <div style={{height:280,position:'relative',overflow:'hidden'}}>
         <div className="hero-bg" style={{backgroundImage:"url('/images/vallon.jpg')",position:'absolute',inset:0,filter:'brightness(.35) saturate(1.1)',backgroundAttachment:'fixed'}}/>
-        <div className="hero-overlay" style={{position:'absolute',inset:0}}/>
+
         <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',paddingTop:68}}>
           <div className="hero-eyebrow">Pratique</div>
           <h1 className="hero-title" style={{fontSize:'clamp(28px,5vw,64px)'}}>Informations <em>essentielles</em></h1>
