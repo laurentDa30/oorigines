@@ -579,11 +579,9 @@ function PageVallon() {
     const parkingIcon=L.divIcon({className:'',html:'<div style="background:#1565c0;color:white;width:30px;height:30px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,.4);font-family:Arial,sans-serif">P</div>',iconSize:[30,30],iconAnchor:[15,15]});
     L.marker([43.917666187591585,4.554630323068647],{icon:parkingIcon}).addTo(map).bindPopup('<b>Parking du Vallon</b><br>Point de départ des parcours');
     TRAILS.forEach(t=>{
-      const pl=L.polyline(t.coords,{color:t.color,weight:4,opacity:.85}).addTo(map);
+      const pl=L.polyline(t.coords,{color:t.color,weight:4,opacity:0}).addTo(map);
       pl.bindPopup(`<b>${t.name}</b><br>${t.dist} · ${t.diff}`);
       polylinesRef.current[t.id]=pl;
-      const last=t.coords[t.coords.length-1];
-      L.marker(last,{icon:L.divIcon({className:'',html:`<div style="background:${t.color};color:white;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;border:2px solid white">${t.icon}</div>`,iconSize:[26,26],iconAnchor:[13,13]})}).addTo(map).bindPopup(`<b>${t.name}</b>`);
     });
     mapInstRef.current=map;
   },[]);
@@ -592,9 +590,9 @@ function PageVallon() {
     TRAILS.forEach(t=>{
       const pl=polylinesRef.current[t.id];
       if(!pl) return;
-      if(!activeTrail)              pl.setStyle({opacity:.85,weight:4});
-      else if(activeTrail===t.id)   pl.setStyle({opacity:1,  weight:6});
-      else                          pl.setStyle({opacity:.15, weight:3});
+      if(!activeTrail)              pl.setStyle({opacity:0,   weight:4});
+      else if(activeTrail===t.id)   pl.setStyle({opacity:1,   weight:6});
+      else                          pl.setStyle({opacity:0,   weight:3});
     });
     mapInstRef.current.invalidateSize();
   },[activeTrail]);
@@ -632,7 +630,7 @@ function PageVallon() {
         <div className="sec-rule" style={{marginBottom:32}}/>
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(260px,1fr))',gap:20,marginBottom:40}}>
           {TRAILS.map(t=>(
-            <div key={t.id} onClick={()=>{setActiveTrail(t.id===activeTrail?null:t.id);if(mapInstRef.current)mapInstRef.current.fitBounds(L.latLngBounds(t.coords),{padding:[30,30]});}}
+            <div key={t.id} onClick={()=>{const next=t.id===activeTrail?null:t.id;setActiveTrail(next);if(mapInstRef.current){if(next)mapInstRef.current.fitBounds(L.latLngBounds(t.coords),{padding:[30,30]});else mapInstRef.current.setView([43.9175,4.5527],16);}}}
               style={{background:activeTrail===t.id?t.color:'var(--paper)',color:activeTrail===t.id?'white':'var(--dark)',padding:'24px 22px',cursor:'pointer',borderLeft:`4px solid ${t.color}`,transition:'all .25s'}}>
               <div style={{fontSize:22,marginBottom:10}}>{t.icon}</div>
               <div style={{fontFamily:'var(--ff)',fontSize:12,letterSpacing:'.2em',textTransform:'uppercase',marginBottom:8,opacity:.85}}>{t.name}</div>
@@ -644,6 +642,12 @@ function PageVallon() {
         <div style={{marginBottom:64}}>
           <div style={{position:'relative',zIndex:0,isolation:'isolate'}}>
             <div ref={mapRef} className="map-container"/>
+            {!activeTrail&&(
+              <div style={{position:'absolute',inset:0,zIndex:1000,background:'oklch(8% .03 38 / .68)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:14,pointerEvents:'none'}}>
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="oklch(70% .04 68)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7l6-3 6 3 6-3v13l-6 3-6-3-6 3V7z"/><path d="M9 4v13M15 7v13"/></svg>
+                <div style={{fontFamily:'var(--ff)',fontSize:11,letterSpacing:'.25em',textTransform:'uppercase',color:'oklch(82% .04 68)',textAlign:'center',lineHeight:1.8}}>Cliquez sur un parcours<br/>pour afficher sa trace</div>
+              </div>
+            )}
           </div>
           <div style={{display:'flex',gap:20,marginTop:12,flexWrap:'wrap'}}>
             {TRAILS.map(t=><div key={t.id} style={{display:'flex',alignItems:'center',gap:6,fontSize:13}}><div style={{width:24,height:3,background:t.color,borderRadius:2}}/>{t.name}</div>)}
