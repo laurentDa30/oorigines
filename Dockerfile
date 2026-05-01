@@ -16,16 +16,19 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
 
-# Dépendances PHP (couche cache Docker)
+# Dépendances PHP sans scripts (artisan pas encore disponible)
 COPY composer.json composer.lock ./
-RUN COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --optimize-autoloader --no-interaction
+RUN COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --no-scripts --no-interaction
 
-# Dépendances Node (couche cache Docker)
+# Dépendances Node
 COPY package.json package-lock.json ./
 RUN npm ci
 
-# Code source
+# Code source complet
 COPY . .
+
+# Post-install scripts maintenant qu'artisan est disponible
+RUN COMPOSER_ALLOW_SUPERUSER=1 composer dump-autoload --no-dev --optimize
 
 # Build Vite
 RUN npm run build
