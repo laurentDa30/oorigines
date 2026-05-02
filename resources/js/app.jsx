@@ -109,7 +109,12 @@ function TopBar({ navigate }) {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
         </a>
       </div>
-      <button className="top-bar-cta" onClick={()=>navigate('courses')}>Je m'inscris →</button>
+      <div className="top-bar-right">
+        <a href="/admin" className="top-bar-icon top-bar-admin" aria-label="Administration">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </a>
+        <button className="top-bar-cta" onClick={()=>navigate('courses')}>Je m'inscris →</button>
+      </div>
     </div>
   );
 }
