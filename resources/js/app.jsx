@@ -883,7 +883,7 @@ function PageContact({ navigate }) {
               <div style={{fontFamily:"'Cinzel',serif",fontWeight:700,fontSize:20,marginBottom:6}}>Organisation</div>
               <div style={{fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:'.3em',textTransform:'uppercase',color:'var(--tc)',marginBottom:20}}>õ origines – Sernhac 2027</div>
             </div>
-            {[[<LocationIcon/>,'Lieu','Le Vallon · 30210 Sernhac, Gard'],[<MailIcon/>,'Email','contact@oorigines-sernhac.fr'],[<PhoneIcon/>,'Téléphone','+33 (0)6 12 34 56 78']].map(([icon,lbl,val])=>(
+            {[[<LocationIcon/>,'Lieu','Le Vallon · 30210 Sernhac, Gard'],[<MailIcon/>,'Email','contact@oorigines-sernhac.fr'],[<PhoneIcon/>,'Téléphone','+33 (0)6 06 06 06 06']].map(([icon,lbl,val])=>(
               <div key={lbl} className="ci-item"><div className="ci-dot">{icon}</div><div><div className="ci-label">{lbl}</div><div className="ci-val">{val}</div></div></div>
             ))}
             <div style={{borderTop:'1px solid var(--stone)',paddingTop:20}}>

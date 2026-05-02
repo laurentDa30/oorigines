@@ -21,8 +21,12 @@ class ContactController extends Controller
 
         Message::create($validated);
 
-        Mail::to(config('mail.from.address'))
-            ->send(new ContactNotification($validated));
+        try {
+            Mail::to(config('mail.from.address'))
+                ->send(new ContactNotification($validated));
+        } catch (\Exception $e) {
+            \Log::warning('Contact mail failed: ' . $e->getMessage());
+        }
 
         return response()->json(['success' => true]);
     }
