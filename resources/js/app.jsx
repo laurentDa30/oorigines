@@ -132,10 +132,10 @@ function Nav({ navigate, menuOpen, setMenuOpen }) {
     ['evenement',"L'Événement",[['evenement',"L'Événement"],['infos',"Infos essentielles"]]],
     ['courses',"Les Courses",[
       ['courses',"Toutes les courses"],
-      ['course_trail20',"Trail des Légions · 20 km"],
-      ['course_trail8',"Foulée des Origines · 8 km"],
-      ['course_marche',"Marche du Vallon · 8 km"],
-      ['course_enfants',"Course Enfants · 1 km"],
+      ['course_trail20',"Astra'trail · 20 km"],
+      ['course_trail8',"Sarnacum’trail · 8 km"],
+      ['course_marche',"Alea jacta est · 8 km"],
+      ['course_enfants',"Irréductibles’Kid trail · 1 km"],
     ]],
     ['vallon',"Le Vallon",null],
     ['artisans',"Artisans",null],
@@ -252,7 +252,7 @@ function PageAccueil({ navigate }) {
               <button className="btn-primary" onClick={()=>navigate('evenement')}>En savoir plus</button>
             </div>
           </div>
-          <div><img src="/images/vallon.jpg" alt="Le Vallon de Sernhac" loading="lazy"/></div>
+          <div className="image-frame"><img src="/images/vallon.jpg" alt="Le Vallon de Sernhac" loading="lazy"/></div>
         </div>
       </div>
 
@@ -276,11 +276,11 @@ function PageAccueil({ navigate }) {
 function PageEvenement({ navigate }) {
   const PROGRAMME = [
     ['10h00',"Ouverture du site · Accueil des participants",false],
-    ['14h30',"Départ Trail 20km – Les Légions de Sernhac",false],
-    ['15h00',"Départ 8km – La Foulée des Origines",false],
+    ['14h30',"Départ Trail 20km – Astra'trail",false],
+    ['15h00',"Départ 8km – Sarnacum’trail",false],
     ['15h30',"Départ marche",false],
     ['15h45',"Estimation - premiers finishers 8km",true],
-    ['16h00',"Départ course enfants",false],
+    ['16h00',"Départ Irréductibles’Kid trail",false],
     ['16h15',"Estimation - premiers finishers Trail 20km",true],
     ['18h00',"Remise des récompenses – Trail 20km",false],
     ['21h00',"Concert, clôture de l'édition 2027",false],
@@ -352,27 +352,27 @@ function PageEvenement({ navigate }) {
 
 /* ── Données courses ─── */
 const RACES = [
-  { id:'trail20',dist:'20',unit:'km',color:'var(--tc)',name:'Trail des Légions',cat:'+18 ans',tagline:'Le défi phare du Vallon',
+  { id:'trail20',dist:'20',unit:'km',color:'var(--tc)',name:"Astra'trail",cat:'+18 ans',tagline:'Le défi phare du Vallon',
     desc:"Le parcours technique et engagé de l'édition. À travers garrigues, falaises calcaires et sentiers romains, ce trail met à l'épreuve l'endurance et la technicité des coureurs dans un cadre d'exception.",
     depart:'8h00',arrivee:'09h45',denivele:'+700m',distance:'20 km',
     profil:[[0,0],[2,80],[4,200],[6,320],[8,420],[10,500],[12,580],[14,520],[16,440],[18,280],[20,0]],
     obligatoire:['Sac / gilet de trail','Eau – 500ml minimum','Couverture de survie','Téléphone chargé','Dossard visible','Cardigan ou coupe-vent'],
     conseille:['Bâtons de trail','Crème solaire','Ravitaillement solide','Guêtres basses','Lampe frontale (départ tôt)'],
     ravito:['Km 6 – à définir','Km 13 – ç définir'],tarif:'18 €',limite:'200 participants' },
-  { id:'trail8',dist:'8',unit:'km',color:'oklch(52% 0.13 160)',name:'Foulée des Origines',cat:'+18 ans',tagline:'Accessible, engagé, inoubliable',
+  { id:'trail8',dist:'8',unit:'km',color:'oklch(52% 0.13 160)',name:"Sarnacum’trail",cat:'+18 ans',tagline:'Accessible, engagé, inoubliable',
     desc:"Un tracé accessible pour découvrir le Vallon à votre rythme. Idéal pour les coureurs débutants ou ceux souhaitant partager la course en famille. Le parcours emprunte les plus beaux sentiers du site.",
     depart:'8h30',arrivee:'9h30',denivele:'+500m',distance:'8 km',
     profil:[[0,0],[1.5,60],[3,150],[4.5,200],[6,140],[8,0]],
     obligatoire:['Dossard visible','Eau – 500ml minimum','Téléphone chargé'],
     conseille:['Chaussures de trail','Crème solaire','Casquette'],
     ravito:['Km 4 – à définir'],tarif:'12 €',limite:'300 participants' },
-  { id:'marche',dist:8,unit:'km',color:'var(--ocre)',name:'Marche du Vallon',cat:'Tout public',tagline:"Une balade guidée dans l'histoire",
+  { id:'marche',dist:8,unit:'km',color:'var(--ocre)',name:"Alea jacta est",cat:'Tout public',tagline:"Une balade guidée dans l'histoire",
     desc:"Une promenade guidée à travers les sentiers historiques du Vallon. Ouverte à tous, sans condition physique particulière. Un guide local accompagne les participants et partage l'histoire romaine du site.",
     depart:'9h00',arrivee:'~12h00',denivele:'+300m',distance:'~6 km',
     profil:[[0,0],[1,20],[2,50],[3,70],[4,60],[5,30],[6,0]],
     obligatoire:['Eau','Chaussures fermées'],conseille:['Chapeau','Crème solaire','Appareil photo'],
     ravito:[],tarif:'Gratuit',limite:'Illimité' },
-  { id:'enfants',dist:1,unit:'km',color:'oklch(60% 0.14 55)',name:'Course Enfants',cat:"Enfants",tagline:'Les petits gladiateurs du Vallon !',
+  { id:'enfants',dist:1,unit:'km',color:'oklch(60% 0.14 55)',name:"Irréductibles’Kid trail",cat:"Enfants",tagline:'Les petits gladiateurs du Vallon !',
     desc:"Un parcours ludique, sécurisé et encadré pour les plus petits. Déguisements romains fortement encouragés ! Chaque enfant repart avec sa médaille de finisher.",
     depart:'9h15',arrivee:'~9h25',denivele:'Plat / très faible',distance:'~1 km',
     profil:[[0,0],[0.3,5],[0.6,8],[0.9,5],[1,0]],
