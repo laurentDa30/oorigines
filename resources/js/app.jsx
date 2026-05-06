@@ -181,6 +181,187 @@ function Nav({ navigate, menuOpen, setMenuOpen }) {
   );
 }
 
+/* ── Accueil – sections additionnelles ─── */
+function getYouTubeEmbedUrl(url) {
+  if (!url) return null;
+  const m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([^&\s?]+)/);
+  return m ? `https://www.youtube.com/embed/${m[1]}?rel=0&modestbranding=1&color=white` : null;
+}
+
+const ACTUALITES = [
+  { id:1, cat:'Inscriptions', date:'Bientôt disponibles',
+    titre:'Ouverture des inscriptions 2027',
+    extrait:"Les inscriptions pour les quatre épreuves d'õ origines ouvriront prochainement. Restez informés pour être parmi les premiers à rejoindre l'aventure." },
+  { id:2, cat:'Parcours', date:'Printemps 2027',
+    titre:"Tracé officiel de l'Astra'trail dévoilé",
+    extrait:"20 kilomètres à travers le Vallon de Sernhac, entre garrigues, falaises calcaires et sentiers romains. La trace GPX sera bientôt disponible en téléchargement." },
+  { id:3, cat:'Village départ', date:'Été 2026',
+    titre:"Un marché d'artisans inédit au Vallon",
+    extrait:"Créateurs, producteurs locaux et artisans du Gard seront réunis pour composer un marché authentique et généreux au cœur du village départ." },
+];
+
+function SectionVideo() {
+  const video = GALERIE.find(g => g.type === 'video' && g.url_video);
+  const embedUrl = video ? getYouTubeEmbedUrl(video.url_video) : null;
+  if (!embedUrl) return null;
+  return (
+    <div style={{background:'var(--dark)',padding:'clamp(56px,8vw,96px) clamp(20px,4vw,48px)',textAlign:'center'}}>
+      <div style={{maxWidth:900,margin:'0 auto'}}>
+        <div className="sec-tag" style={{color:'var(--ocre)'}}>Découvrir</div>
+        <h2 className="sec-title" style={{color:'var(--cream)',textAlign:'center'}}>Le Vallon en <em>vidéo</em></h2>
+        <div className="sec-rule" style={{margin:'0 auto 40px'}}/>
+        <div style={{position:'relative',paddingBottom:'56.25%',height:0,overflow:'hidden',borderTop:'3px solid var(--tc)'}}>
+          <iframe
+            src={embedUrl}
+            title={video.titre||'õ origines – vidéo'}
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            style={{position:'absolute',top:0,left:0,width:'100%',height:'100%'}}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PhotoCard({ src, alt, titre, position, isLoaded, index, onClick }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <motion.div
+      style={{position:'absolute',top:0,left:0,zIndex:hovered?9999:(5-index)*10,cursor:'pointer'}}
+      initial={{x:0,y:0,rotate:0}}
+      animate={isLoaded?{x:position.x,y:position.y,rotate:position.rotate}:{x:0,y:0,rotate:0}}
+      transition={{type:'spring',stiffness:65,damping:13,delay:index*0.13}}
+      whileHover={{scale:1.14,rotate:0}}
+      onHoverStart={()=>setHovered(true)}
+      onHoverEnd={()=>setHovered(false)}
+      onClick={onClick}
+    >
+      <div style={{
+        width:200,height:200,overflow:'hidden',background:'var(--dark2)',
+        boxShadow:hovered
+          ?'0 22px 64px oklch(0% 0 0 / .65)'
+          :'0 10px 48px oklch(0% 0 0 / .55)',
+        userSelect:'none',transition:'box-shadow .25s',position:'relative',
+      }}>
+        {src
+          ? <>
+              <img src={src} alt={alt} style={{width:'100%',height:'100%',objectFit:'cover',display:'block',userSelect:'none',pointerEvents:'none',draggable:false}}/>
+              <div style={{
+                position:'absolute',inset:0,
+                background:'linear-gradient(to top, oklch(8% .03 38 / .78) 0%, transparent 52%)',
+                display:'flex',alignItems:'flex-end',padding:'12px',
+                opacity:hovered?1:0,transition:'opacity .22s',
+              }}>
+                <span style={{fontFamily:"'Cinzel',serif",fontSize:9,letterSpacing:'.3em',textTransform:'uppercase',color:'white',lineHeight:1.4}}>
+                  {titre||'Galerie'}
+                </span>
+              </div>
+            </>
+          : <div style={{width:'100%',height:'100%',background:'oklch(22% .03 68)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <div style={{width:40,height:40,background:'oklch(38% .04 68)',clipPath:'polygon(50% 0%,100% 50%,50% 100%,0% 50%)'}}/>
+            </div>
+        }
+      </div>
+    </motion.div>
+  );
+}
+
+function SectionGalerieHome({ navigate }) {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const photos = GALERIE.filter(g => g.image).slice(0, 5);
+
+  const POSITIONS = [
+    { x: -300, y:  18, rotate: -4   },
+    { x: -150, y:  32, rotate: -2   },
+    { x:    0, y:   6, rotate:  1   },
+    { x:  150, y:  24, rotate:  3   },
+    { x:  300, y:  44, rotate: -2.5 },
+  ];
+
+  useEffect(() => {
+    const t = setTimeout(() => setIsLoaded(true), 700);
+    return () => clearTimeout(t);
+  }, []);
+
+  return (
+    <div style={{background:'var(--dark)',padding:'clamp(56px,8vw,96px) clamp(20px,4vw,48px)',overflow:'hidden'}}>
+      <div style={{maxWidth:1160,margin:'0 auto'}}>
+        <div style={{textAlign:'center',marginBottom:52}}>
+          <div className="sec-tag" style={{color:'var(--ocre)'}}>Galerie</div>
+          <h2 className="sec-title" style={{color:'var(--cream)',textAlign:'center'}}>Quelques <em>instants</em></h2>
+          <div className="sec-rule" style={{margin:'0 auto 0'}}/>
+        </div>
+        <div style={{position:'relative',height:360,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:52}}>
+          <div style={{position:'absolute',inset:0,backgroundImage:'linear-gradient(oklch(55% .02 68 / .09) 1px,transparent 1px),linear-gradient(90deg,oklch(55% .02 68 / .09) 1px,transparent 1px)',backgroundSize:'48px 48px',maskImage:'radial-gradient(ellipse 90% 70% at 50% 50%,black 30%,transparent 100%)',WebkitMaskImage:'radial-gradient(ellipse 90% 70% at 50% 50%,black 30%,transparent 100%)'}}/>
+          <div style={{position:'relative',width:200,height:200}}>
+            {POSITIONS.map((pos, i) => (
+              <PhotoCard key={i} index={i} src={photos[i]?.image} alt={photos[i]?.titre||''} titre={photos[i]?.titre} position={pos} isLoaded={isLoaded} onClick={()=>navigate('galerie')}/>
+            ))}
+          </div>
+        </div>
+        <div style={{textAlign:'center'}}>
+          <button className="btn-primary" onClick={()=>navigate('galerie')}>Voir toute la galerie →</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SectionActualites() {
+  return (
+    <div style={{background:'var(--cream)',padding:'clamp(56px,8vw,96px) clamp(20px,4vw,48px)',borderTop:'1px solid var(--stone)'}}>
+      <div style={{maxWidth:1160,margin:'0 auto'}}>
+        <div className="sec-tag">Actualités</div>
+        <h2 className="sec-title">Les dernières <em>nouvelles</em></h2>
+        <div className="sec-rule"/>
+        <div className="home-actu-grid">
+          {ACTUALITES.map(a => (
+            <div key={a.id} className="home-actu-card">
+              <div className="home-actu-meta">
+                <span className="home-actu-cat">{a.cat}</span>
+                <span className="home-actu-date">{a.date}</span>
+              </div>
+              <h3 className="home-actu-title">{a.titre}</h3>
+              <div className="home-actu-rule"/>
+              <p className="home-actu-excerpt">{a.extrait}</p>
+              <div className="home-actu-read">
+                Lire la suite
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SectionParallaxCTA({ navigate }) {
+  return (
+    <div className="parallax-bg" style={{backgroundImage:"url('/images/depart.jpg')",backgroundAttachment:'scroll',minHeight:460,padding:'clamp(60px,8vw,100px) clamp(20px,4vw,48px)',display:'flex',alignItems:'center',justifyContent:'center',position:'relative'}}>
+      <div style={{position:'absolute',inset:0,background:'oklch(8% .03 38 / .72)'}}/>
+      <div style={{position:'relative',textAlign:'center',maxWidth:720,width:'100%'}}>
+        <div className="hero-rule" style={{marginBottom:24}}>
+          <div className="hero-rule-line"/>
+          <div className="hero-rule-ornament">✦</div>
+          <div className="hero-rule-line r"/>
+        </div>
+        <h2 style={{fontFamily:"'Cinzel',serif",fontSize:'clamp(28px,4.5vw,56px)',fontWeight:900,color:'white',lineHeight:1.1,marginBottom:20,letterSpacing:'.02em'}}>
+          Prêt à fouler les <em style={{color:'var(--tc)'}}>sentiers de l'histoire</em> ?
+        </h2>
+        <p style={{fontSize:'clamp(16px,1.4vw,19px)',lineHeight:1.8,color:'oklch(72% .04 68)',marginBottom:40,fontFamily:"'EB Garamond',serif"}}>
+          Rejoignez des coureurs et familles pour une journée hors du temps au cœur du Vallon de Sernhac.
+        </p>
+        <button className="btn-primary" style={{padding:'18px 56px',fontSize:12,letterSpacing:'.35em'}} onClick={()=>navigate('courses')}>
+          Je m'inscris →
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /* ── Page Accueil ─── */
 function PageAccueil({ navigate }) {
   const [revealed, setRevealed] = useState(false);
@@ -255,6 +436,11 @@ function PageAccueil({ navigate }) {
           <div className="image-frame"><img src="/images/vallon.jpg" alt="Le Vallon de Sernhac" loading="lazy"/></div>
         </div>
       </div>
+
+      <SectionVideo/>
+      <SectionGalerieHome navigate={navigate}/>
+      <SectionActualites/>
+      <SectionParallaxCTA navigate={navigate}/>
 
       <div style={{background:'var(--paper)',padding:'clamp(40px,6vw,72px) clamp(20px,4vw,48px)'}}>
         <div className="stats-grid">
@@ -621,7 +807,7 @@ function PageVallon() {
             <p className="body">Ses terrasses méditerranéennes plantées d'oliviers centenaires, son exceptionnelle biodiversité et ses tunnels taillés dans la roche en font un lieu unique en Occitanie.</p>
             <p className="body">Le site est entretenu et animé par l'association bénévole <strong>« Le Vallon d'Escaunes à Cantarelles »</strong>, partenaire naturel de notre événement.</p>
           </div>
-          <div style={{position:'sticky',top:88,alignSelf:'flex-start',display:'flex',flexDirection:'column',gap:16}}>
+          <div style={{position:'sticky',top:110,alignSelf:'flex-start',display:'flex',flexDirection:'column',gap:16}}>
             {[['Tunnels romains','Deux tunnels creusés par les légions romaines au Ier siècle, visibles et praticables'],['Oliviers centenaires','Des terrasses entretenues par des familles bénévoles depuis des générations'],['Biodiversité exceptionnelle','Orchidées sauvages, faune endémique, végétation méditerranéenne préservée'],['Guide audio',"Parcours sonore \"La Perrotte\" : QR code à scanner à l'entrée du parking"]].map(([t,d])=>(
               <div key={t} style={{background:'var(--paper)',padding:'18px 22px',borderLeft:'3px solid var(--tc)'}}>
                 <div style={{fontFamily:'var(--ff)',fontSize:11,letterSpacing:'.2em',textTransform:'uppercase',color:'var(--tc)',marginBottom:4}}>{t}</div>
