@@ -1,0 +1,20 @@
+<IfModule mod_rewrite.c>
+    Options -MultiViews -Indexes
+    RewriteEngine On
+
+    # Fichiers statiques existants dans public/ → servis directement
+    RewriteCond %{DOCUMENT_ROOT}/public%{REQUEST_URI} -f
+    RewriteRule ^(.+)$ public/$1 [L]
+
+    # Dossiers existants dans public/ → servis directement
+    RewriteCond %{DOCUMENT_ROOT}/public%{REQUEST_URI} -d
+    RewriteRule ^(.+)$ public/$1 [L]
+
+    # Bloquer l'accès à /admin (ancienne URL connue) → 404
+    RewriteRule ^admin(/.*)?$ - [R=404,L]
+
+    # Tout le reste → point d'entrée Laravel
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ index.php [L]
+</IfModule>

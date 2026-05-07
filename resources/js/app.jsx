@@ -2,6 +2,7 @@ import './bootstrap';
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { createRoot } from 'react-dom/client';
+import DOMPurify from 'dompurify';
 
 const SITE_OPEN      = new Date(window.__SITE_OPEN  || '2026-09-01T00:00:00');
 const EVENT_DATE     = new Date(window.__EVENT_DATE || '2027-04-24T08:00:00');
@@ -10,12 +11,34 @@ const ARTISAN_COUNT  = window.__ARTISAN_COUNT || 0;
 const PARTENAIRES    = window.__PARTENAIRES   || [];
 const ARTISANS       = window.__ARTISANS      || [];
 const GALERIE        = window.__GALERIE       || [];
+const SITE_INFO      = window.__SITE_INFO     || {};
+const COURSES        = window.__COURSES       || [];
+const ACTUALITES     = window.__ACTUALITES    || [];
+const SEO_BASE       = window.__SEO_BASE      || {};
 
-const PAGES = ['accueil','evenement','infos','courses','vallon','artisans','galerie','partenaires','contact'];
+// Helpers date événement — tout se lit depuis EVENT_DATE
+function fmtDate(date, opts) { return date.toLocaleDateString('fr-FR', opts); }
+const EVENT_YEAR        = EVENT_DATE.getFullYear();
+const EVENT_DATE_COURT  = fmtDate(EVENT_DATE, {day:'numeric', month:'long', year:'numeric'});
+const EVENT_DATE_CAP    = EVENT_DATE_COURT.replace(/(\d+\s)(\w)/, (_, d, l) => d + l.toUpperCase());
+const EVENT_DATE_LONG   = fmtDate(EVENT_DATE, {weekday:'long', day:'numeric', month:'long', year:'numeric'}).replace(/^\w/, l => l.toUpperCase());
+function eventEve() {
+  const d = new Date(EVENT_DATE); d.setDate(d.getDate() - 1);
+  return fmtDate(d, {weekday:'long', day:'numeric', month:'long', year:'numeric'}).replace(/^\w/, l => l.toUpperCase());
+}
+
+function toUrlSlug(str) {
+  return (str || '').toLowerCase()
+    .replace(/[àâä]/g,'a').replace(/[éèêë]/g,'e').replace(/[îï]/g,'i')
+    .replace(/[ôö]/g,'o').replace(/[ùûü]/g,'u').replace(/ç/g,'c')
+    .replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+}
+
+const PAGES = ['accueil','evenement','infos','courses','vallon','artisans','galerie','partenaires','contact','actualites'];
 function pageFromPath() {
   const p = window.location.pathname.replace(/^\//, '') || 'accueil';
   if(PAGES.includes(p)) return p;
-  if(p.startsWith('course_')) return p;
+  if(p.startsWith('course/')) return p;
   return 'accueil';
 }
 
@@ -82,16 +105,17 @@ function Partners({ navigate }) {
 
 /* ── Intro ─── */
 function IntroScreen({ onEnter }) {
+  const t = useCountdown(SITE_OPEN);
   return (
     <div className="intro">
       <div className="intro-inner">
-        <div className="intro-loc">Sernhac · Le Vallon · Gard · 24 Avril 2027</div>
-        <div className="intro-brand"><em>õ</em> origines</div>
-        <div className="intro-tag">Trail · Nature · Tradition · Époque Romaine</div>
+        <div className="intro-loc">Sernhac · Le Vallon · Gard · {EVENT_DATE_CAP}</div>
+        <div className="intro-brand">Aux <em>õ</em>rigines</div>
+        <div className="intro-tag">Trail Nature · Tradition · Époque Romaine</div>
         <Ornament/>
-        <div className="intro-msg">Ouverture du site dans</div>
+        <div className="intro-msg">{t.done ? 'Le site est ouvert !' : 'Ouverture du site dans'}</div>
         <CountdownRow target={SITE_OPEN}/>
-        <button className="btn-enter" onClick={onEnter}>Découvrir l'événement →</button>
+        {t.done && <button className="btn-enter" onClick={onEnter}>Découvrir l'événement →</button>}
       </div>
     </div>
   );
@@ -110,10 +134,10 @@ function TopBar({ navigate }) {
         </a>
       </div>
       <div className="top-bar-right">
-        <a href="/admin" className="top-bar-icon top-bar-admin" aria-label="Administration">
+        <button className="top-bar-cta" onClick={()=>navigate('courses')}>Je m'inscris →</button>
+        <a href={`/${window.__ADMIN_PATH||'gestion-origines'}`} className="top-bar-icon top-bar-admin" aria-label="Administration">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         </a>
-        <button className="top-bar-cta" onClick={()=>navigate('courses')}>Je m'inscris →</button>
       </div>
     </div>
   );
@@ -129,18 +153,16 @@ function Nav({ navigate, menuOpen, setMenuOpen }) {
   const go = p => { navigate(p); setMenuOpen(false); };
   const links = [
     ['accueil',"Accueil",null],
-    ['evenement',"L'Événement",[['evenement',"L'Événement"],['infos',"Infos essentielles"]]],
+    ['evenement',"L'Événement",[['evenement',"L'Événement"],['infos',"Infos essentielles · Bientôt"]]],
     ['courses',"Les Courses",[
       ['courses',"Toutes les courses"],
-      ['course_trail20',"Astra'trail · 20 km"],
-      ['course_trail8',"Sarnacum’trail · 8 km"],
-      ['course_marche',"Alea jacta est · 8 km"],
-      ['course_enfants',"Irréductibles’Kid trail · 1 km"],
+      ...RACES.map(r => [`course/${r.urlSlug}`, `${r.name} · ${r.distance}`]),
     ]],
     ['vallon',"Le Vallon",null],
     ['artisans',"Artisans",null],
     ['galerie',"Galerie",null],
     ['partenaires',"Partenaires",null],
+    ['actualites',"Actualités",null],
     ['contact',"Contact",null],
   ];
   const linksLeft  = links.slice(0,4);
@@ -151,7 +173,12 @@ function Nav({ navigate, menuOpen, setMenuOpen }) {
       {sub&&(
         <ul className="sub-nav">
           {sub.map(([sid,slbl])=>(
-            <li key={sid}><a onClick={e=>{e.stopPropagation();go(sid);}}>{slbl}</a></li>
+            <li key={sid}>
+              {sid==='infos'
+                ? <a style={{opacity:.45,cursor:'not-allowed',pointerEvents:'none'}}>{slbl}</a>
+                : <a onClick={e=>{e.stopPropagation();go(sid);}}>{slbl}</a>
+              }
+            </li>
           ))}
         </ul>
       )}
@@ -162,7 +189,7 @@ function Nav({ navigate, menuOpen, setMenuOpen }) {
       <nav className={scrolled?'scrolled':''}>
         <ul className="nav-links nav-links-left">{linksLeft.map(renderLink)}</ul>
         <div className="nav-logo" onClick={()=>go('accueil')}>
-          <img src="/images/logo/logo-preview.png" alt="õ origines" style={{height:80,width:'auto',display:'block',position:'relative',zIndex:1}}/>
+          <img src="/images/logo/logo-preview.png" alt="Aux õrigines" style={{height:80,width:'auto',display:'block',position:'relative',zIndex:1}}/>
         </div>
         <ul className="nav-links nav-links-right">{linksRight.map(renderLink)}</ul>
         <button className="hamburger" onClick={()=>setMenuOpen(o=>!o)}><span/><span/><span/></button>
@@ -185,40 +212,74 @@ function Nav({ navigate, menuOpen, setMenuOpen }) {
 function getYouTubeEmbedUrl(url) {
   if (!url) return null;
   const m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([^&\s?]+)/);
-  return m ? `https://www.youtube.com/embed/${m[1]}?rel=0&modestbranding=1&color=white` : null;
+  // youtube-nocookie.com : mode confidentialité renforcée (pas de cookie sans interaction)
+  return m ? `https://www.youtube-nocookie.com/embed/${m[1]}?rel=0&modestbranding=1&color=white` : null;
 }
 
-const ACTUALITES = [
-  { id:1, cat:'Inscriptions', date:'Bientôt disponibles',
-    titre:'Ouverture des inscriptions 2027',
-    extrait:"Les inscriptions pour les quatre épreuves d'õ origines ouvriront prochainement. Restez informés pour être parmi les premiers à rejoindre l'aventure." },
-  { id:2, cat:'Parcours', date:'Printemps 2027',
-    titre:"Tracé officiel de l'Astra'trail dévoilé",
-    extrait:"20 kilomètres à travers le Vallon de Sernhac, entre garrigues, falaises calcaires et sentiers romains. La trace GPX sera bientôt disponible en téléchargement." },
-  { id:3, cat:'Village départ', date:'Été 2026',
-    titre:"Un marché d'artisans inédit au Vallon",
-    extrait:"Créateurs, producteurs locaux et artisans du Gard seront réunis pour composer un marché authentique et généreux au cœur du village départ." },
-];
+/* ── Consentement cookies — Context partagé ─── */
+const CookieConsentCtx = React.createContext({ consent: null, accept: ()=>{}, refuse: ()=>{} });
+
+function YoutubeEmbed({ url, title, style }) {
+  const embedUrl = getYouTubeEmbedUrl(url);
+  const { consent, accept } = React.useContext(CookieConsentCtx);
+  if (!embedUrl) return null;
+  if (consent === 'all') {
+    return <iframe src={embedUrl} title={title||'Vidéo'} frameBorder="0"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      allowFullScreen style={style}/>;
+  }
+  return (
+    <div style={{...style, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'oklch(12% .03 38)', gap:16, padding:24}}>
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="oklch(50% .04 38)"><path d="M21.8 8s-.2-1.4-.8-2c-.8-.8-1.6-.8-2-.9C16.3 5 12 5 12 5s-4.3 0-7 .1c-.4.1-1.2.1-2 .9-.6.6-.8 2-.8 2S2 9.6 2 11.2v1.5c0 1.6.2 3.2.2 3.2s.2 1.4.8 2c.8.8 1.8.8 2.3.9C6.8 19 12 19 12 19s4.3 0 7-.2c.4-.1 1.2-.1 2-.9.6-.6.8-2 .8-2s.2-1.6.2-3.2v-1.5C22 9.6 21.8 8 21.8 8zM10 15V9l5.2 3L10 15z"/></svg>
+      <p style={{fontFamily:"'EB Garamond',serif",fontSize:15,color:'oklch(65% .04 68)',textAlign:'center',maxWidth:280,lineHeight:1.6}}>
+        Cette vidéo est hébergée par YouTube.<br/>Son chargement dépose des cookies.
+      </p>
+      <button onClick={accept} style={{fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:'.25em',textTransform:'uppercase',background:'var(--tc)',color:'white',border:'none',padding:'10px 20px',cursor:'pointer'}}>
+        Accepter et lire la vidéo
+      </button>
+    </div>
+  );
+}
+
+function CookieBanner({ onAccept, onRefuse }) {
+  return (
+    <div style={{position:'fixed',bottom:0,left:0,right:0,zIndex:9999,background:'var(--dark2)',borderTop:'2px solid var(--tc)',padding:'clamp(16px,2vw,24px) clamp(20px,4vw,48px)',display:'flex',alignItems:'center',justifyContent:'space-between',gap:24,flexWrap:'wrap',boxShadow:'0 -4px 32px oklch(0% 0 0 / .4)'}}>
+      <div style={{flex:'1 1 320px',minWidth:0}}>
+        <p style={{fontFamily:"'Cinzel',serif",fontSize:11,letterSpacing:'.2em',textTransform:'uppercase',color:'var(--ocre)',marginBottom:6}}>Cookies & confidentialité</p>
+        <p style={{fontFamily:"'EB Garamond',serif",fontSize:15,color:'oklch(75% .04 68)',lineHeight:1.6}}>
+          <strong style={{color:'white',fontStyle:'normal'}}>Aux õrigines ne collecte aucune information personnelle lors de votre visite.</strong>{' '}
+          Ce site utilise uniquement des cookies techniques nécessaires et des cookies tiers optionnels via <strong style={{color:'white'}}>YouTube</strong> et <strong style={{color:'white'}}>Google Fonts</strong>. Vous pouvez les refuser sans aucun impact sur votre navigation.
+        </p>
+      </div>
+      <div style={{display:'flex',gap:12,flexShrink:0,flexWrap:'wrap'}}>
+        <button onClick={onRefuse} style={{fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:'.25em',textTransform:'uppercase',background:'none',color:'oklch(65% .04 68)',border:'1px solid oklch(30% .03 38)',padding:'10px 18px',cursor:'pointer',transition:'border-color .2s,color .2s'}}
+          onMouseEnter={e=>{e.target.style.borderColor='var(--stone)';e.target.style.color='white';}}
+          onMouseLeave={e=>{e.target.style.borderColor='oklch(30% .03 38)';e.target.style.color='oklch(65% .04 68)';}}>
+          Refuser
+        </button>
+        <button onClick={onAccept} style={{fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:'.25em',textTransform:'uppercase',background:'var(--tc)',color:'white',border:'none',padding:'10px 18px',cursor:'pointer',transition:'background .2s'}}
+          onMouseEnter={e=>{e.target.style.background='var(--ocre)';e.target.style.color='var(--dark)';}}
+          onMouseLeave={e=>{e.target.style.background='var(--tc)';e.target.style.color='white';}}>
+          Tout accepter
+        </button>
+      </div>
+    </div>
+  );
+}
+
 
 function SectionVideo() {
-  const video = GALERIE.find(g => g.type === 'video' && g.url_video);
-  const embedUrl = video ? getYouTubeEmbedUrl(video.url_video) : null;
-  if (!embedUrl) return null;
+  const video = GALERIE.find(g => g.video_accueil && g.url_video);
+  if (!video) return null;
   return (
-    <div style={{background:'var(--dark)',padding:'clamp(56px,8vw,96px) clamp(20px,4vw,48px)',textAlign:'center'}}>
+    <div style={{background:'var(--cream)',padding:'clamp(56px,8vw,96px) clamp(20px,4vw,48px)',textAlign:'center'}}>
       <div style={{maxWidth:900,margin:'0 auto'}}>
         <div className="sec-tag" style={{color:'var(--ocre)'}}>Découvrir</div>
-        <h2 className="sec-title" style={{color:'var(--cream)',textAlign:'center'}}>Le Vallon en <em>vidéo</em></h2>
+        <h2 className="sec-title" style={{color:'var(--dark2)',textAlign:'center'}}>Aux <em>õ</em>rigines en <em>vidéo</em></h2>
         <div className="sec-rule" style={{margin:'0 auto 40px'}}/>
-        <div style={{position:'relative',paddingBottom:'56.25%',height:0,overflow:'hidden',borderTop:'3px solid var(--tc)'}}>
-          <iframe
-            src={embedUrl}
-            title={video.titre||'õ origines – vidéo'}
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            style={{position:'absolute',top:0,left:0,width:'100%',height:'100%'}}
-          />
+        <div style={{position:'relative',paddingBottom:'56.25%',height:0,overflow:'hidden',border:'3px solid oklch(22% .05 38)',boxShadow:'0 8px 48px oklch(0% 0 0 / .6)'}}>
+          <YoutubeEmbed url={video.url_video} title={video.titre||'aux õrigines – vidéo'}
+            style={{position:'absolute',top:0,left:0,width:'100%',height:'100%'}}/>
         </div>
       </div>
     </div>
@@ -232,7 +293,7 @@ function PhotoCard({ src, alt, titre, position, isLoaded, index, onClick }) {
       style={{position:'absolute',top:0,left:0,zIndex:hovered?9999:(5-index)*10,cursor:'pointer'}}
       initial={{x:0,y:0,rotate:0}}
       animate={isLoaded?{x:position.x,y:position.y,rotate:position.rotate}:{x:0,y:0,rotate:0}}
-      transition={{type:'spring',stiffness:65,damping:13,delay:index*0.13}}
+      transition={{type:'spring',stiffness:65,damping:13,delay:0.13}}
       whileHover={{scale:1.14,rotate:0}}
       onHoverStart={()=>setHovered(true)}
       onHoverEnd={()=>setHovered(false)}
@@ -286,7 +347,7 @@ function SectionGalerieHome({ navigate }) {
   }, []);
 
   return (
-    <div style={{background:'var(--dark)',padding:'clamp(56px,8vw,96px) clamp(20px,4vw,48px)',overflow:'hidden'}}>
+    <div style={{background:'oklch(17% 0.05 55)',padding:'clamp(56px,8vw,96px) clamp(20px,4vw,48px)',overflow:'hidden',borderTop:'3px solid var(--tc)',boxShadow:'inset 0 8px 32px oklch(0% 0 0 / .3)'}}>
       <div style={{maxWidth:1160,margin:'0 auto'}}>
         <div style={{textAlign:'center',marginBottom:52}}>
           <div className="sec-tag" style={{color:'var(--ocre)'}}>Galerie</div>
@@ -309,7 +370,27 @@ function SectionGalerieHome({ navigate }) {
   );
 }
 
-function SectionActualites() {
+function ActuCard({ a, onClick }) {
+  return (
+    <div className="home-actu-card" onClick={onClick} style={{cursor:onClick?'pointer':'default'}}>
+      <div className="home-actu-meta">
+        <span className="home-actu-cat">{a.categorie}</span>
+        {a.date_label && <span className="home-actu-date">{a.date_label}</span>}
+      </div>
+      <h3 className="home-actu-title">{a.titre}</h3>
+      <div className="home-actu-rule"/>
+      <p className="home-actu-excerpt">{a.extrait}</p>
+      <div className="home-actu-read">
+        Lire la suite
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
+      </div>
+    </div>
+  );
+}
+
+function SectionActualites({ navigate }) {
+  if (!ACTUALITES.length) return null;
+  const preview = ACTUALITES.slice(0, 3);
   return (
     <div style={{background:'var(--cream)',padding:'clamp(56px,8vw,96px) clamp(20px,4vw,48px)',borderTop:'1px solid var(--stone)'}}>
       <div style={{maxWidth:1160,margin:'0 auto'}}>
@@ -317,22 +398,17 @@ function SectionActualites() {
         <h2 className="sec-title">Les dernières <em>nouvelles</em></h2>
         <div className="sec-rule"/>
         <div className="home-actu-grid">
-          {ACTUALITES.map(a => (
-            <div key={a.id} className="home-actu-card">
-              <div className="home-actu-meta">
-                <span className="home-actu-cat">{a.cat}</span>
-                <span className="home-actu-date">{a.date}</span>
-              </div>
-              <h3 className="home-actu-title">{a.titre}</h3>
-              <div className="home-actu-rule"/>
-              <p className="home-actu-excerpt">{a.extrait}</p>
-              <div className="home-actu-read">
-                Lire la suite
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
-              </div>
-            </div>
+          {preview.map(a => (
+            <ActuCard key={a.id} a={a} onClick={navigate ? () => navigate('actualites') : null}/>
           ))}
         </div>
+        {ACTUALITES.length > 0 && navigate && (
+          <div style={{textAlign:'center',marginTop:40}}>
+            <button className="btn-primary" onClick={()=>navigate('actualites')}>
+              Toutes les actualités →
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -340,7 +416,7 @@ function SectionActualites() {
 
 function SectionParallaxCTA({ navigate }) {
   return (
-    <div className="parallax-bg" style={{backgroundImage:"url('/images/depart.jpg')",backgroundAttachment:'scroll',minHeight:460,padding:'clamp(60px,8vw,100px) clamp(20px,4vw,48px)',display:'flex',alignItems:'center',justifyContent:'center',position:'relative'}}>
+    <div className="parallax-bg" style={{backgroundImage:"url('/images/depart.jpg')",backgroundAttachment:'fixed',backgroundSize:'cover',backgroundPosition:'center',minHeight:460,padding:'clamp(60px,8vw,100px) clamp(20px,4vw,48px)',display:'flex',alignItems:'center',justifyContent:'center',position:'relative'}}>
       <div style={{position:'absolute',inset:0,background:'oklch(8% .03 38 / .72)'}}/>
       <div style={{position:'relative',textAlign:'center',maxWidth:720,width:'100%'}}>
         <div className="hero-rule" style={{marginBottom:24}}>
@@ -392,7 +468,7 @@ function PageAccueil({ navigate }) {
             <div className="hero-eyebrow" style={{color:'white'}}>Sernhac · Le Vallon · Gard · MMXXVII</div>
             <div className="hero-rule"><div className="hero-rule-line"/><div className="hero-rule-ornament">✦</div><div className="hero-rule-line r"/></div>
           </motion.div>
-          <div style={titleStyle}><h1 className="hero-title" style={{fontSize:'clamp(48px,9vw,120px)',whiteSpace:'nowrap'}}><em>õ</em> origines</h1></div>
+          <div style={titleStyle}><h1 className="hero-title" style={{fontSize:'clamp(48px,9vw,120px)',whiteSpace:'nowrap'}}>Aux <em>õ</em>rigines</h1></div>
         </div>
         <motion.div
           initial={{opacity:0,y:16}}
@@ -402,7 +478,7 @@ function PageAccueil({ navigate }) {
         >
           <div className="hero-latin" style={{color:'rgb(255,223,190)'}}>· RETOUR AUX SOURCES ·</div>
           <div className="hero-date-block">
-            <div className="hero-date-item"><span className="hero-date-val">24 Avril 2027</span><span className="hero-date-lbl">Date</span></div>
+            <div className="hero-date-item"><span className="hero-date-val">{EVENT_DATE_CAP}</span><span className="hero-date-lbl">Date</span></div>
             <div className="hero-date-sep"/>
             <div className="hero-date-item"><span className="hero-date-val">Sernhac</span><span className="hero-date-lbl">Le Vallon · Gard</span></div>
             <div className="hero-date-sep"/>
@@ -417,7 +493,7 @@ function PageAccueil({ navigate }) {
       </div>
 
       <div className="cstrip">
-        <div className="cstrip-label" style={{color:'rgb(185,153,97)'}}>Compte à rebours – Rendez-vous le 24 Avril 2027</div>
+        <div className="cstrip-label" style={{color:'rgb(185,153,97)'}}>Compte à rebours – Rendez-vous le {EVENT_DATE_CAP}</div>
         <CountdownRow target={EVENT_DATE} light/>
       </div>
 
@@ -425,9 +501,9 @@ function PageAccueil({ navigate }) {
         <div className="split">
           <div>
             <div className="sec-tag">L'Événement</div>
-            <h2 className="sec-title">Retournez aux <em>origines</em></h2>
+            <h2 className="sec-title">Retournez aux <em>õ</em>rigines</h2>
             <div className="sec-rule"/>
-            <p className="body">Le 24 avril 2027, Sernhac ouvre les portes d'une expérience unique au cœur du Vallon. Dans un décor naturel exceptionnel, aux accents de l'époque romaine, coureurs et familles se retrouvent pour célébrer le sport, le terroir et l'artisanat local.</p>
+            <p className="body">Le {EVENT_DATE_COURT}, Sernhac ouvre les portes d'une expérience unique au cœur du Vallon. Dans un décor naturel exceptionnel, aux accents de l'époque romaine, coureurs et familles se retrouvent pour célébrer le sport, le terroir et l'artisanat local.</p>
             <p className="body">Une journée hors du temps, entre effort et convivialité, dans l'un des plus beaux sites naturels du Gard.</p>
             <div style={{display:'flex',gap:12,flexWrap:'wrap',marginTop:8}}>
               <button className="btn-primary" onClick={()=>navigate('evenement')}>En savoir plus</button>
@@ -439,7 +515,7 @@ function PageAccueil({ navigate }) {
 
       <SectionVideo/>
       <SectionGalerieHome navigate={navigate}/>
-      <SectionActualites/>
+      <SectionActualites navigate={navigate}/>
       <SectionParallaxCTA navigate={navigate}/>
 
       <div style={{background:'var(--paper)',padding:'clamp(40px,6vw,72px) clamp(20px,4vw,48px)'}}>
@@ -462,14 +538,15 @@ function PageAccueil({ navigate }) {
 function PageEvenement({ navigate }) {
   const PROGRAMME = [
     ['10h00',"Ouverture du site · Accueil des participants",false],
-    ['14h30',"Départ Trail 20km – Astra'trail",false],
-    ['15h00',"Départ 8km – Sarnacum’trail",false],
-    ['15h30',"Départ marche",false],
-    ['15h45',"Estimation - premiers finishers 8km",true],
-    ['16h00',"Départ Irréductibles’Kid trail",false],
+    ['15h00',"Départ Trail 20km – Astra'trail",false],
+    ['15h30',"Départ 12km – Sarnacum'trail",false],
+    ['16h30',"Départ 12km marche",false],
+    ['16h15',"Estimation - premiers finishers 12km",true],
+    ['16h00',"Départ Marche Nordique trail",false],
+    ['14h00',"Départ Irréductibles'Kid trail",false],
     ['16h15',"Estimation - premiers finishers Trail 20km",true],
     ['18h00',"Remise des récompenses – Trail 20km",false],
-    ['21h00',"Concert, clôture de l'édition 2027",false],
+    ['21h00',`Concert, clôture de l'édition ${EVENT_YEAR}`,false],
   ];
   return (
     <>
@@ -478,7 +555,7 @@ function PageEvenement({ navigate }) {
 
         <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',paddingTop:112}}>
           <div className="hero-eyebrow">L'Événement</div>
-          <h1 className="hero-title" style={{fontSize:'clamp(40px,7vw,90px)'}}><em>õ</em> origines</h1>
+          <h1 className="hero-title" style={{fontSize:'clamp(40px,7vw,90px)'}}><em>õ</em> õrigines</h1>
         </div>
       </div>
       <div className="wrap">
@@ -494,12 +571,12 @@ function PageEvenement({ navigate }) {
             <div className="sec-tag">L'Esprit</div>
             <h2 className="sec-title">Une fête <em>populaire</em></h2>
             <div className="sec-rule"/>
-            <p className="body">Porté par les habitants de Sernhac et les associations locales, õ origines est avant tout une fête populaire. L'objectif : rassembler sportifs, familles et amoureux du patrimoine autour d'une journée festive et authentique.</p>
+            <p className="body">Porté par les habitants de Sernhac et les associations locales, aux õrigines est avant tout une fête populaire. L'objectif : rassembler sportifs, familles et amoureux du patrimoine autour d'une journée festive et authentique.</p>
             <p className="body">Marché d'artisans, animations d'époque, restauration sur place et ambiance chaleureuse garantie tout au long de la journée.</p>
           </div>
         </div>
         <div className="prog-block">
-          <div className="prog-tag">Programme de la journée – 24 Avril 2027</div>
+          <div className="prog-tag">Programme de la journée – {EVENT_DATE_CAP}</div>
           <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:24,padding:'10px 16px',background:'oklch(92% .04 80 / .35)',borderRadius:4}}>
             <span style={{color:'var(--tc)',fontSize:16}}>☀</span>
             <span style={{fontFamily:'var(--ff)',fontSize:14,color:'oklch(38% .06 38)',fontStyle:'italic'}}>Restauration · Animations tout au long de la journée</span>
@@ -512,7 +589,7 @@ function PageEvenement({ navigate }) {
           ))}
         </div>
       </div>
-      <div className="parallax-bg" style={{backgroundImage:"url('/images/depart.jpg')",minHeight:530,padding:'clamp(40px,6vw,80px) clamp(20px,4vw,48px)',display:'flex',alignItems:'center'}}>
+      <div className="parallax-bg" style={{backgroundImage:"url('/images/depart.jpg')",backgroundAttachment:'fixed',backgroundSize:'cover',backgroundPosition:'center',minHeight:530,padding:'clamp(40px,6vw,80px) clamp(20px,4vw,48px)',display:'flex',alignItems:'center'}}>
         <div style={{position:'absolute',inset:0,background:'oklch(8% .03 38 / .60)'}}/>
         <div style={{position:'relative',maxWidth:1160,margin:'0 auto',display:'flex',justifyContent:'flex-end',width:'100%'}}>
           <div style={{background:'oklch(10% .04 38 / .92)',padding:'clamp(28px,4vw,52px)',maxWidth:560,borderLeft:'4px solid var(--tc)',width:'100%'}}>
@@ -520,7 +597,7 @@ function PageEvenement({ navigate }) {
             <h2 className="sec-title" style={{color:'var(--cream)'}}>Là où l'histoire <em>se court</em></h2>
             <div className="sec-rule"/>
             <p style={{fontSize:'clamp(16px,1.4vw,19px)',lineHeight:1.85,color:'oklch(68% .03 68)',marginBottom:18}}>Chaque kilomètre parcouru sur les sentiers du Vallon est une plongée dans l'histoire. Les pierres calcaires, les terrasses romaines et les oliviers millénaires témoignent d'un passé vivant.</p>
-            <p style={{fontSize:'clamp(16px,1.4vw,19px)',lineHeight:1.85,color:'oklch(68% .03 68)'}}>Venir à õ origines, c'est bien plus que courir — c'est appartenir à quelque chose de plus grand.</p>
+            <p style={{fontSize:'clamp(16px,1.4vw,19px)',lineHeight:1.85,color:'oklch(68% .03 68)'}}>Venir à aux õrigines, c'est bien plus que courir — c'est appartenir à quelque chose de plus grand.</p>
           </div>
         </div>
       </div>
@@ -529,42 +606,35 @@ function PageEvenement({ navigate }) {
           <div className="sec-tag">Préparez votre venue</div>
           <div style={{fontFamily:"'Cinzel',serif",fontSize:'clamp(16px,2vw,22px)',fontWeight:700,color:'var(--dark)'}}>Accès · Parking · Dossards · Infos pratiques</div>
         </div>
-        <button className="btn-primary" onClick={()=>navigate('infos')}>Informations essentielles →</button>
+        <button className="btn-primary" disabled style={{opacity:.4,cursor:'not-allowed'}}>Informations essentielles · Bientôt →</button>
       </div>
       <Partners navigate={navigate}/>
     </>
   );
 }
 
-/* ── Données courses ─── */
-const RACES = [
-  { id:'trail20',dist:'20',unit:'km',color:'var(--tc)',name:"Astra'trail",cat:'+18 ans',tagline:'Le défi phare du Vallon',
-    desc:"Le parcours technique et engagé de l'édition. À travers garrigues, falaises calcaires et sentiers romains, ce trail met à l'épreuve l'endurance et la technicité des coureurs dans un cadre d'exception.",
-    depart:'8h00',arrivee:'09h45',denivele:'+700m',distance:'20 km',
-    profil:[[0,0],[2,80],[4,200],[6,320],[8,420],[10,500],[12,580],[14,520],[16,440],[18,280],[20,0]],
-    obligatoire:['Sac / gilet de trail','Eau – 500ml minimum','Couverture de survie','Téléphone chargé','Dossard visible','Cardigan ou coupe-vent'],
-    conseille:['Bâtons de trail','Crème solaire','Ravitaillement solide','Guêtres basses','Lampe frontale (départ tôt)'],
-    ravito:['Km 6 – à définir','Km 13 – ç définir'],tarif:'18 €',limite:'200 participants' },
-  { id:'trail8',dist:'8',unit:'km',color:'oklch(52% 0.13 160)',name:"Sarnacum’trail",cat:'+18 ans',tagline:'Accessible, engagé, inoubliable',
-    desc:"Un tracé accessible pour découvrir le Vallon à votre rythme. Idéal pour les coureurs débutants ou ceux souhaitant partager la course en famille. Le parcours emprunte les plus beaux sentiers du site.",
-    depart:'8h30',arrivee:'9h30',denivele:'+500m',distance:'8 km',
-    profil:[[0,0],[1.5,60],[3,150],[4.5,200],[6,140],[8,0]],
-    obligatoire:['Dossard visible','Eau – 500ml minimum','Téléphone chargé'],
-    conseille:['Chaussures de trail','Crème solaire','Casquette'],
-    ravito:['Km 4 – à définir'],tarif:'12 €',limite:'300 participants' },
-  { id:'marche',dist:8,unit:'km',color:'var(--ocre)',name:"Alea jacta est",cat:'Tout public',tagline:"Une balade guidée dans l'histoire",
-    desc:"Une promenade guidée à travers les sentiers historiques du Vallon. Ouverte à tous, sans condition physique particulière. Un guide local accompagne les participants et partage l'histoire romaine du site.",
-    depart:'9h00',arrivee:'~12h00',denivele:'+300m',distance:'~6 km',
-    profil:[[0,0],[1,20],[2,50],[3,70],[4,60],[5,30],[6,0]],
-    obligatoire:['Eau','Chaussures fermées'],conseille:['Chapeau','Crème solaire','Appareil photo'],
-    ravito:[],tarif:'Gratuit',limite:'Illimité' },
-  { id:'enfants',dist:1,unit:'km',color:'oklch(60% 0.14 55)',name:"Irréductibles’Kid trail",cat:"Enfants",tagline:'Les petits gladiateurs du Vallon !',
-    desc:"Un parcours ludique, sécurisé et encadré pour les plus petits. Déguisements romains fortement encouragés ! Chaque enfant repart avec sa médaille de finisher.",
-    depart:'9h15',arrivee:'~9h25',denivele:'Plat / très faible',distance:'~1 km',
-    profil:[[0,0],[0.3,5],[0.6,8],[0.9,5],[1,0]],
-    obligatoire:['Accompagnement adulte requis pour les – 6 ans'],conseille:['Déguisement romain','Eau'],
-    ravito:[],tarif:'Gratuit',limite:'Illimité' },
-];
+/* ── Données courses (depuis la base de données) ─── */
+const RACES = COURSES.map(c => ({
+  id:          c.slug,
+  urlSlug:     toUrlSlug(c.nom),
+  dist:        c.distance_val,
+  unit:        c.distance_unit,
+  color:       c.couleur || "var(--tc)",
+  name:        c.nom,
+  cat:         c.categorie,
+  tagline:     c.tagline,
+  desc:        c.description,
+  depart:      c.heure_depart,
+  arrivee:     c.heure_arrivee,
+  denivele:    c.denivele,
+  distance:    c.distance_affichee,
+  profil:      c.profil || [],
+  obligatoire: c.equipement_obligatoire || [],
+  conseille:   c.equipement_conseille || [],
+  ravito:      c.ravitaillement || [],
+  tarif:       c.tarif,
+  limite:      c.limite,
+}));
 
 function ProfilSVG({ points, color }) {
   const W=560,H=140,pad=20;
@@ -706,7 +776,7 @@ function PageCourses({ navigate }) {
         <p className="body" style={{maxWidth:580}}>Quatre épreuves pour tous les niveaux, dans un cadre naturel exceptionnel marqué par l'histoire romaine du Vallon de Sernhac. Cliquez sur une course pour voir le détail.</p>
         <div className="race-grid">
           {RACES.map(r=>(
-            <div key={r.id} className="race-card" onClick={()=>navigate('course_'+r.id)} style={{cursor:'pointer'}}>
+            <div key={r.id} className="race-card" onClick={()=>navigate('course/'+r.urlSlug)} style={{cursor:'pointer'}}>
               <div style={{position:'absolute',top:0,left:0,width:3,height:'100%',background:r.color}}/>
               {r.dist?<div className="race-dist" style={{color:r.color}}>{r.dist}<sup>{r.unit}</sup></div>:<div className="race-bar" style={{background:r.color}}/>}
               <div className="race-name">{r.name}</div>
@@ -734,7 +804,7 @@ function PagePartenaires({ navigate }) {
         <div className="sec-rule"/>
         <div className="split" style={{marginBottom:52}}>
           <div>
-            <p className="body">õ origines est un événement ancré dans le territoire, porté par et pour les habitants de Sernhac et du Gard. En devenant partenaire, vous associez votre image à une journée sportive et culturelle d'exception, dans un cadre naturel unique.</p>
+            <p className="body">aux õrigines est un événement ancré dans le territoire, porté par et pour les habitants de Sernhac et du Gard. En devenant partenaire, vous associez votre image à une journée sportive et culturelle d'exception, dans un cadre naturel unique.</p>
             <p className="body">Votre logo apparaît sur tous les supports de communication : site web, affiches, dossards, et le jour J sur les banderoles et le village départ.</p>
             <button className="btn-primary" onClick={()=>navigate('contact')} style={{marginTop:8}}>Nous contacter pour un partenariat</button>
           </div>
@@ -757,7 +827,7 @@ function PageVallon() {
   const mapRef=useRef(null), mapInstRef=useRef(null), polylinesRef=useRef({});
   const [activeTrail,setActiveTrail]=useState(null);
   const TRAILS=[
-    {id:'eau',name:"Au fil de l'eau",color:'#4a90d9',icon:'💧',desc:"Suivez le parcours de l'eau romaine et visualisez le passage de l’eau dans le vallon afin de comprendre la prouesse technique dans le creusement des galeries des tunnels de Perrotte à Cantarelles",dist:'<1 km',diff:'Facile',duree:'1h',coords:[[43.91753,4.55269],[43.91773,4.55272],[43.91786,4.55277],[43.91791,4.55271],[43.91794,4.55271],[43.91799,4.55265],[43.91787,4.55254],[43.91776,4.5525],[43.91765,4.5524],[43.91755,4.55225],[43.91737,4.55189],[43.91725,4.55156],[43.91723,4.55154],[43.91716,4.55158],[43.91712,4.55147],[43.917,4.55126],[43.91697,4.55087],[43.91692,4.55075],[43.91695,4.55062],[43.91687,4.55046],[43.91683,4.55052],[43.91678,4.55057],[43.91669,4.5506],[43.91664,4.55113],[43.9166,4.55131],[43.91655,4.55144],[43.9164,4.55169],[43.91635,4.55172],[43.91638,4.5518],[43.91631,4.55188],[43.91623,4.55201],[43.91624,4.55211],[43.91621,4.55219],[43.91632,4.55232],[43.91646,4.55212],[43.91649,4.55201],[43.91669,4.5518],[43.91684,4.55176],[43.91697,4.55192],[43.9172,4.55229],[43.91737,4.55216],[43.91747,4.55242],[43.91755,4.5525]]},
+    {id:'eau',name:"Au fil de l'eau",color:'#4a90d9',icon:'💧',desc:"Suivez le parcours de l'eau romaine et visualisez le passage de l'eau dans le vallon afin de comprendre la prouesse technique dans le creusement des galeries des tunnels de Perrotte à Cantarelles",dist:'<1 km',diff:'Facile',duree:'1h',coords:[[43.91753,4.55269],[43.91773,4.55272],[43.91786,4.55277],[43.91791,4.55271],[43.91794,4.55271],[43.91799,4.55265],[43.91787,4.55254],[43.91776,4.5525],[43.91765,4.5524],[43.91755,4.55225],[43.91737,4.55189],[43.91725,4.55156],[43.91723,4.55154],[43.91716,4.55158],[43.91712,4.55147],[43.917,4.55126],[43.91697,4.55087],[43.91692,4.55075],[43.91695,4.55062],[43.91687,4.55046],[43.91683,4.55052],[43.91678,4.55057],[43.91669,4.5506],[43.91664,4.55113],[43.9166,4.55131],[43.91655,4.55144],[43.9164,4.55169],[43.91635,4.55172],[43.91638,4.5518],[43.91631,4.55188],[43.91623,4.55201],[43.91624,4.55211],[43.91621,4.55219],[43.91632,4.55232],[43.91646,4.55212],[43.91649,4.55201],[43.91669,4.5518],[43.91684,4.55176],[43.91697,4.55192],[43.9172,4.55229],[43.91737,4.55216],[43.91747,4.55242],[43.91755,4.5525]]},
     {id:'hommes',name:'Au fil des hommes',color:'#c8793a',icon:'🏺',desc:"Accédez au sommet du rocher « La Perrotte » qui domine le site offrant une vue magnifique sur les terrasses des terrasses d'oliviers cultivées par les familles bénévoles aux capitelles en pierre sèche.",dist:'~1,2 km',diff:'Modéré',duree:'1h30',coords:[[43.91751,4.5527],[43.91754,4.55269],[43.91773,4.55272],[43.91786,4.55277],[43.91791,4.55271],[43.91794,4.55271],[43.91812,4.55254],[43.91815,4.55253],[43.91822,4.55256],[43.91826,4.55256],[43.91831,4.55262],[43.91837,4.55265],[43.9184,4.55262],[43.91841,4.55257],[43.91853,4.55256],[43.91865,4.55266],[43.91883,4.55275],[43.91892,4.55283],[43.919,4.55284],[43.91904,4.55287],[43.91911,4.55287],[43.91918,4.55274],[43.91927,4.55263],[43.91934,4.55267],[43.91939,4.55262],[43.91938,4.55252],[43.91932,4.5524],[43.91932,4.55233],[43.91944,4.55222],[43.91946,4.55213],[43.9195,4.5521],[43.91949,4.55201],[43.91951,4.55194],[43.91964,4.55187],[43.91966,4.55177],[43.91965,4.55168],[43.91968,4.55158],[43.91989,4.55154],[43.92009,4.5514],[43.92014,4.55141],[43.92032,4.55111],[43.92027,4.55084],[43.92031,4.55051],[43.92,4.55057],[43.91998,4.55058],[43.91993,4.55064],[43.91986,4.55064],[43.91968,4.5506],[43.91958,4.55054],[43.91955,4.55056],[43.91942,4.55048],[43.91936,4.55046],[43.91929,4.55049],[43.91927,4.55042],[43.91921,4.55038],[43.91911,4.55037],[43.91906,4.55033],[43.91907,4.55025],[43.91904,4.5502],[43.91897,4.55022],[43.91892,4.55021],[43.9189,4.55015],[43.91902,4.55005],[43.91904,4.54998],[43.91916,4.54986],[43.9192,4.54974],[43.91921,4.54965],[43.91915,4.54959],[43.91912,4.54961],[43.91916,4.5494],[43.91911,4.54923],[43.9191,4.54922],[43.91904,4.54919],[43.91893,4.54922],[43.91856,4.5491],[43.91829,4.54896],[43.91825,4.54892],[43.91824,4.54891],[43.91803,4.5493],[43.91786,4.5498],[43.9178,4.5499],[43.91757,4.54995],[43.91748,4.55004],[43.91738,4.55025],[43.91753,4.55033],[43.91756,4.55056],[43.91772,4.55113],[43.91782,4.55144],[43.91795,4.55146],[43.91795,4.55154],[43.91788,4.55177],[43.91796,4.55208],[43.91795,4.55243],[43.91798,4.5525],[43.91799,4.55265],[43.91794,4.55271],[43.91791,4.55271],[43.91786,4.55277],[43.91773,4.55272],[43.91753,4.55269]]},
     {id:'temps',name:'Au fil du temps',color:'#7a6a3a',icon:'⏳',desc:"Découvrez les capitales (Carrière, la Communale, les Sources) récemment restaurées le rocher emblématique du vallon.",dist:'~1,4 km',diff:'Facile',duree:'1h',coords:[[43.91753,4.55269],[43.91773,4.55272],[43.91786,4.55277],[43.91791,4.55271],[43.91794,4.55271],[43.91799,4.55265],[43.91787,4.55254],[43.91776,4.5525],[43.91768,4.55242],[43.91771,4.55252],[43.9177,4.55256],[43.91757,4.55252],[43.91747,4.55242],[43.91736,4.55213],[43.91735,4.55197],[43.91742,4.55174],[43.9175,4.55169],[43.91749,4.55155],[43.91745,4.5514],[43.91732,4.55118],[43.91724,4.55057],[43.91731,4.55048],[43.9174,4.55021],[43.91748,4.55004],[43.91757,4.54995],[43.91757,4.54989],[43.91752,4.54981],[43.91735,4.54984],[43.91698,4.54967],[43.91697,4.54966],[43.91695,4.54943],[43.91696,4.54918],[43.91706,4.54903],[43.91692,4.54877],[43.9168,4.5482],[43.91694,4.54783],[43.91689,4.5475],[43.917,4.54714],[43.91697,4.54706],[43.9168,4.54707],[43.91673,4.54713],[43.9165,4.54758],[43.91641,4.54765],[43.91627,4.54763],[43.91619,4.54774],[43.91611,4.54822],[43.91601,4.54836],[43.91567,4.54871],[43.91562,4.54886],[43.91551,4.54895],[43.91522,4.54913],[43.91538,4.54928],[43.9154,4.54932],[43.91538,4.54937],[43.91539,4.54945],[43.91552,4.54963],[43.91574,4.55004],[43.91583,4.55017],[43.91588,4.55011],[43.91599,4.55016],[43.91606,4.55029],[43.91615,4.55029],[43.91619,4.55038],[43.91621,4.55057],[43.91634,4.55078],[43.91642,4.55098],[43.91652,4.55102],[43.91656,4.55108],[43.91647,4.55132],[43.9164,4.55138],[43.91639,4.55141],[43.91642,4.55156],[43.91641,4.55162],[43.91638,4.55167],[43.91634,4.5517],[43.91638,4.5518],[43.91631,4.55188],[43.91623,4.55201],[43.91624,4.55211],[43.91621,4.55219],[43.91632,4.55232],[43.91646,4.55212],[43.91649,4.55201],[43.91669,4.5518],[43.9167,4.55171],[43.91684,4.55175],[43.91695,4.55186],[43.91728,4.5524],[43.91751,4.55257]]},
   ];
@@ -879,12 +949,12 @@ function PageArtisans({ navigate }) {
         <div className="sec-rule"/>
         <div className="split" style={{marginBottom:52}}>
           <div>
-            <p className="body">õ origines accueille un marché d'artisans locaux au cœur du Vallon. Potiers, tisserands, producteurs du terroir... Tous partagent un même attachement au savoir-faire authentique et à la création manuelle.</p>
+            <p className="body">Aux õrigines accueille un marché d'artisans locaux au cœur du Vallon. Potiers, tisserands, producteurs du terroir... Tous partagent un même attachement au savoir-faire authentique et à la création manuelle.</p>
             <p className="body">Dans l'esprit de la tradition romaine, les artisans proposeront leurs créations dans un cadre évocateur, entre les oliviers et les falaises calcaires.</p>
           </div>
           <div style={{background:'var(--paper)',padding:'clamp(20px,3vw,36px)',borderLeft:'4px solid var(--tc)'}}>
             <div style={{fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:'.4em',textTransform:'uppercase',color:'var(--tc)',marginBottom:18}}>Vous êtes artisan ?</div>
-            <p className="body" style={{marginBottom:20}}>Les emplacements sont gratuits pour les artisans de la région gardoise. Rejoignez l'édition 2027.</p>
+            <p className="body" style={{marginBottom:20}}>Les emplacements sont gratuits pour les artisans de la région gardoise. Rejoignez l'édition {EVENT_YEAR}.</p>
             <button className="btn-primary" onClick={()=>navigate('contact')}>Réserver un emplacement</button>
           </div>
         </div>
@@ -937,7 +1007,7 @@ function PageGalerie({ navigate }) {
         <div className="sec-tag">Souvenirs</div>
         <h2 className="sec-title">La <em>Galerie</em></h2>
         <div className="sec-rule"/>
-        <p className="body">Les photos du Vallon et des éditions passées. Les clichés de l'édition 2027 seront ajoutés après l'événement.</p>
+        <p className="body">Les photos du Vallon et des éditions passées. Les clichés de l'édition {EVENT_YEAR} seront ajoutés après l'événement.</p>
         <div className="gal-grid">
           {photos.length > 0
             ? GALERIE.map((g, i) => {
@@ -954,9 +1024,8 @@ function PageGalerie({ navigate }) {
                         <div className="gal-item-caption"><span>{g.titre} · {g.annee}</span></div>
                       </>
                     ) : g.url_video ? (
-                      <div style={{position:'relative',width:'100%',height:'100%',background:'var(--dark)'}}>
-                        <iframe src={g.url_video} style={{position:'absolute',inset:0,width:'100%',height:'100%',border:'none'}} allowFullScreen title={g.titre}/>
-                      </div>
+                      <YoutubeEmbed url={g.url_video} title={g.titre}
+                        style={{position:'absolute',inset:0,width:'100%',height:'100%',border:'none'}}/>
                     ) : (
                       <div className="gal-placeholder"><div className="gal-placeholder-icon"/><span className="gal-placeholder-lbl">À venir · {g.annee||2027}</span></div>
                     )}
@@ -1067,17 +1136,21 @@ function PageContact({ navigate }) {
           <div className="ci">
             <div>
               <div style={{fontFamily:"'Cinzel',serif",fontWeight:700,fontSize:20,marginBottom:6}}>Organisation</div>
-              <div style={{fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:'.3em',textTransform:'uppercase',color:'var(--tc)',marginBottom:20}}>õ origines – Sernhac 2027</div>
+              <div style={{fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:'.3em',textTransform:'uppercase',color:'var(--tc)',marginBottom:20}}>Aux õrigines – Sernhac {EVENT_YEAR}</div>
             </div>
-            {[[<LocationIcon/>,'Lieu','Le Vallon · 30210 Sernhac, Gard'],[<MailIcon/>,'Email','contact@oorigines-sernhac.fr'],[<PhoneIcon/>,'Téléphone','+33 (0)6 06 06 06 06']].map(([icon,lbl,val])=>(
+            {[
+              [<LocationIcon/>,'Lieu',   SITE_INFO.adresse   || 'Le Vallon · 30210 Sernhac, Gard'],
+              [<MailIcon/>,   'Email',   SITE_INFO.email     || 'contact@aux-origines-sernhac.fr'],
+              [<PhoneIcon/>,  'Téléphone', SITE_INFO.telephone || '+33 (0)6 06 06 06 06'],
+            ].map(([icon,lbl,val])=>(
               <div key={lbl} className="ci-item"><div className="ci-dot">{icon}</div><div><div className="ci-label">{lbl}</div><div className="ci-val">{val}</div></div></div>
             ))}
             <div style={{borderTop:'1px solid var(--stone)',paddingTop:20}}>
               <div style={{fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:'.3em',textTransform:'uppercase',color:'var(--tc)',marginBottom:12}}>Réseaux sociaux</div>
               <div className="social-row">
-                <a href="https://www.facebook.com/assoc.sms" aria-label="Facebook" style={{display:'flex',alignItems:'center',justifyContent:'center',width:44,height:44,background:'#1877F2',borderRadius:'50%'}}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
-                </a>
+                {SITE_INFO.facebook  && <a href={SITE_INFO.facebook}  target="_blank" rel="noreferrer" aria-label="Facebook"  style={{display:'flex',alignItems:'center',justifyContent:'center',width:44,height:44,background:'#1877F2',borderRadius:'50%'}}><svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>}
+                {SITE_INFO.instagram && <a href={SITE_INFO.instagram} target="_blank" rel="noreferrer" aria-label="Instagram" style={{display:'flex',alignItems:'center',justifyContent:'center',width:44,height:44,background:'linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)',borderRadius:'50%'}}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>}
+                {SITE_INFO.youtube   && <a href={SITE_INFO.youtube}   target="_blank" rel="noreferrer" aria-label="YouTube"   style={{display:'flex',alignItems:'center',justifyContent:'center',width:44,height:44,background:'#FF0000',borderRadius:'50%'}}><svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.6C5.12 20 12 20 12 20s6.88 0 8.59-.4a2.78 2.78 0 0 0 1.95-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="#FF0000"/></svg></a>}
               </div>
             </div>
           </div>
@@ -1112,7 +1185,7 @@ function PageInfos({ navigate }) {
     {
       icon:'📋', titre:'Retrait des dossards', couleur:'oklch(52% 0.13 160)',
       items:[
-        ['Veille de l\'événement','Samedi 23 avril 2027, de 15h00 à 19h00 — Village départ, Parking du Vallon.'],
+        ['Veille de l\'événement',`${eventEve()}, de 15h00 à 19h00 — Village départ, Parking du Vallon.`],
         ['Jour J','Dès 7h00 jusqu\'à 30 min avant le départ de chaque épreuve.'],
         ['Documents requis','Pièce d\'identité + certificat médical de non contre-indication à la pratique du trail (moins d\'un an) ou licence sportive en cours de validité.'],
         ['Retrait par un tiers','Possible avec procuration écrite + copie de la pièce d\'identité du coureur.'],
@@ -1162,8 +1235,8 @@ function PageInfos({ navigate }) {
         <div style={{background:'var(--paper)',borderLeft:'4px solid var(--tc)',padding:'20px 28px',marginBottom:52,display:'flex',alignItems:'center',gap:16,flexWrap:'wrap'}}>
           <span style={{fontSize:22}}>📅</span>
           <div>
-            <div style={{fontFamily:"'Cinzel',serif",fontSize:11,letterSpacing:'.3em',textTransform:'uppercase',color:'var(--tc)',marginBottom:4}}>Édition 2027</div>
-            <div style={{fontFamily:"'Cinzel',serif",fontSize:15,fontWeight:700,color:'var(--dark)'}}>Samedi 24 avril 2027 · Vallon de Sernhac · 30210 Sernhac (Gard)</div>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:11,letterSpacing:'.3em',textTransform:'uppercase',color:'var(--tc)',marginBottom:4}}>Édition {EVENT_YEAR}</div>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:15,fontWeight:700,color:'var(--dark)'}}>{EVENT_DATE_LONG} · Vallon de Sernhac · 30210 Sernhac (Gard)</div>
           </div>
           <button className="btn-primary" onClick={()=>navigate('contact')}>Une question ? →</button>
         </div>
@@ -1201,9 +1274,216 @@ function PageInfos({ navigate }) {
   );
 }
 
+/* ── Page Actualités ─── */
+function PageActualites({ navigate }) {
+  const [selected, setSelected] = useState(null);
+
+  useEffect(() => {
+    window.scrollTo({top:0,behavior:'instant'});
+  }, [selected]);
+
+  if (selected !== null) {
+    const a    = ACTUALITES[selected];
+    const prev = selected > 0                    ? ACTUALITES[selected - 1] : null;
+    const next = selected < ACTUALITES.length - 1 ? ACTUALITES[selected + 1] : null;
+    const navBtn = {fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:'.28em',textTransform:'uppercase',background:'none',border:'1px solid var(--stone)',borderRadius:2,cursor:'pointer',padding:'10px 20px',display:'flex',alignItems:'center',gap:8,color:'var(--dark)',transition:'border-color .18s,color .18s'};
+    return (
+      <>
+        <div className="wrap" style={{paddingTop:164}}>
+          {/* Fil d'Ariane */}
+          <button onClick={()=>setSelected(null)} style={{fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:'.3em',textTransform:'uppercase',color:'var(--stone)',background:'none',border:'none',cursor:'pointer',marginBottom:36,display:'flex',alignItems:'center',gap:8,padding:0}}>
+            ← Toutes les actualités
+          </button>
+
+          {/* En-tête article */}
+          <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:18}}>
+            <span style={{fontFamily:"'Cinzel',serif",fontSize:9,letterSpacing:'.25em',textTransform:'uppercase',color:'white',background:'var(--tc)',padding:'4px 12px',borderRadius:2}}>{a.categorie}</span>
+            {a.date_label && <span style={{fontFamily:"'EB Garamond',serif",fontSize:15,color:'var(--stone)',fontStyle:'italic'}}>{a.date_label}</span>}
+          </div>
+          <h1 style={{fontFamily:"'Cinzel',serif",fontSize:'clamp(22px,3.5vw,40px)',fontWeight:900,color:'var(--dark)',lineHeight:1.2,marginBottom:20}}>{a.titre}</h1>
+          <div className="sec-rule" style={{marginBottom:28}}/>
+
+          {/* Corps */}
+          <div style={{maxWidth:780}}>
+            {a.extrait && <p style={{fontFamily:"'EB Garamond',serif",fontSize:'clamp(17px,1.3vw,20px)',lineHeight:1.8,color:'oklch(35% .04 38)',marginBottom:28,fontStyle:'italic'}}>{a.extrait}</p>}
+            {a.contenu
+              ? <div className="actu-body" dangerouslySetInnerHTML={{__html:DOMPurify.sanitize(a.contenu)}}/>
+              : <p style={{fontFamily:"'EB Garamond',serif",fontSize:17,color:'var(--stone)',fontStyle:'italic'}}>Contenu complet à venir…</p>
+            }
+          </div>
+
+          {/* Navigation précédent / suivant */}
+          <div style={{borderTop:'1px solid var(--stone)',marginTop:56,paddingTop:32,display:'flex',justifyContent:'space-between',alignItems:'stretch',gap:16,flexWrap:'wrap'}}>
+            {prev ? (
+              <button style={{...navBtn,flex:'1 1 200px',justifyContent:'flex-start'}} onClick={()=>setSelected(selected-1)}
+                onMouseEnter={e=>{e.currentTarget.style.borderColor='var(--tc)';e.currentTarget.style.color='var(--tc)';}}
+                onMouseLeave={e=>{e.currentTarget.style.borderColor='var(--stone)';e.currentTarget.style.color='var(--dark)';}}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style={{flexShrink:0}}><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                <span style={{textAlign:'left'}}>
+                  <span style={{display:'block',fontSize:8,opacity:.6,marginBottom:2}}>Article précédent</span>
+                  {prev.titre}
+                </span>
+              </button>
+            ) : <div style={{flex:'1 1 200px'}}/>}
+
+            <button onClick={()=>setSelected(null)} style={{...navBtn,alignSelf:'center',flexShrink:0}}
+              onMouseEnter={e=>{e.currentTarget.style.borderColor='var(--tc)';e.currentTarget.style.color='var(--tc)';}}
+              onMouseLeave={e=>{e.currentTarget.style.borderColor='var(--stone)';e.currentTarget.style.color='var(--dark)';}}>
+              Toutes les actualités
+            </button>
+
+            {next ? (
+              <button style={{...navBtn,flex:'1 1 200px',justifyContent:'flex-end',textAlign:'right'}} onClick={()=>setSelected(selected+1)}
+                onMouseEnter={e=>{e.currentTarget.style.borderColor='var(--tc)';e.currentTarget.style.color='var(--tc)';}}
+                onMouseLeave={e=>{e.currentTarget.style.borderColor='var(--stone)';e.currentTarget.style.color='var(--dark)';}}>
+                <span style={{textAlign:'right'}}>
+                  <span style={{display:'block',fontSize:8,opacity:.6,marginBottom:2}}>Article suivant</span>
+                  {next.titre}
+                </span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style={{flexShrink:0}}><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
+              </button>
+            ) : <div style={{flex:'1 1 200px'}}/>}
+          </div>
+        </div>
+        <Partners navigate={navigate}/>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <div className="wrap" style={{paddingTop:164}}>
+        <div className="sec-tag">Dernières nouvelles</div>
+        <h2 className="sec-title">Toutes les <em>Actualités</em></h2>
+        <div className="sec-rule"/>
+        {!ACTUALITES.length && (
+          <p style={{fontFamily:"'EB Garamond',serif",fontSize:18,color:'var(--stone)',fontStyle:'italic',padding:'48px 0'}}>
+            Aucune actualité pour le moment. Revenez bientôt !
+          </p>
+        )}
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(320px,1fr))',gap:28,marginTop:8}}>
+          {ACTUALITES.map((a,i) => (
+            <div key={a.id} onClick={()=>setSelected(i)} style={{background:'white',borderRadius:4,padding:28,cursor:'pointer',boxShadow:'0 2px 12px oklch(0% 0 0 / .06)',borderTop:'3px solid var(--tc)',transition:'box-shadow .2s,transform .2s'}}
+              onMouseEnter={e=>{e.currentTarget.style.boxShadow='0 8px 32px oklch(0% 0 0 / .12)';e.currentTarget.style.transform='translateY(-2px)';}}
+              onMouseLeave={e=>{e.currentTarget.style.boxShadow='0 2px 12px oklch(0% 0 0 / .06)';e.currentTarget.style.transform='translateY(0)';}}
+            >
+              <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14}}>
+                <span style={{fontFamily:"'Cinzel',serif",fontSize:9,letterSpacing:'.25em',textTransform:'uppercase',color:'white',background:'var(--tc)',padding:'3px 10px',borderRadius:2}}>{a.categorie}</span>
+                {a.date_label && <span style={{fontFamily:"'EB Garamond',serif",fontSize:14,color:'var(--stone)',fontStyle:'italic'}}>{a.date_label}</span>}
+              </div>
+              <h3 style={{fontFamily:"'Cinzel',serif",fontSize:'clamp(15px,1.5vw,18px)',fontWeight:700,color:'var(--dark)',lineHeight:1.35,marginBottom:12}}>{a.titre}</h3>
+              <div style={{height:1,background:'var(--stone)',margin:'12px 0',opacity:.4}}/>
+              <p style={{fontFamily:"'EB Garamond',serif",fontSize:16,lineHeight:1.7,color:'oklch(38% .04 38)',margin:0}}>{a.extrait}</p>
+              <div style={{marginTop:18,fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:'.25em',textTransform:'uppercase',color:'var(--tc)',display:'flex',alignItems:'center',gap:6}}>
+                Lire la suite
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <Partners navigate={navigate}/>
+    </>
+  );
+}
+
+/* ── Footer ─── */
+const NAV_PLAN = [
+  { label: 'Accueil',      page: 'accueil' },
+  { label: 'Événement',    page: 'evenement' },
+  { label: 'Infos pratiques', page: 'infos', disabled: true },
+  { label: 'Les courses',  page: 'courses' },
+  { label: 'Le Vallon',    page: 'vallon' },
+  { label: 'Artisans',     page: 'artisans' },
+  { label: 'Galerie',      page: 'galerie' },
+  { label: 'Partenaires',  page: 'partenaires' },
+  { label: 'Actualités',   page: 'actualites' },
+  { label: 'Contact',      page: 'contact' },
+];
+
+function IconFacebook() {
+  return <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>;
+}
+function IconInstagram() {
+  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>;
+}
+function IconYoutube() {
+  return <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.6C5.12 20 12 20 12 20s6.88 0 8.59-.4a2.78 2.78 0 0 0 1.95-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="white"/></svg>;
+}
+
+function Footer({ navigate }) {
+  const info = SITE_INFO;
+  const copyright = info.copyright || `© ${new Date().getFullYear()} aux õrigines · Sernhac · Gard · Tous droits réservés`;
+
+  return (
+    <footer className="site-footer">
+      <div className="site-footer__inner">
+
+        {/* Bloc 1 — Nos infos + réseaux */}
+        <div className="site-footer__col site-footer__col--brand">
+          <div className="site-footer__logo" onClick={() => navigate('accueil')}>
+            <span className="site-footer__logo-name">Aux</span>
+            <span className="site-footer__logo-name"><span className="site-footer__logo-mark">õ</span>rigines</span>
+          </div>
+          <p className="site-footer__tagline">Trail · Nature · Tradition<br/>Époque Romaine · Sernhac</p>
+          {(info.adresse || info.email || info.telephone) && (
+            <ul className="site-footer__infos">
+              {info.adresse    && <li><span className="site-footer__info-icon">📍</span>{info.adresse}</li>}
+              {info.email      && <li><span className="site-footer__info-icon">✉</span><a href={`mailto:${info.email}`}>{info.email}</a></li>}
+              {info.telephone  && <li><span className="site-footer__info-icon">☎</span><a href={`tel:${info.telephone}`}>{info.telephone}</a></li>}
+            </ul>
+          )}
+          {(info.facebook || info.instagram || info.youtube) && (
+            <div className="site-footer__socials">
+              {info.facebook  && <a href={info.facebook}  target="_blank" rel="noreferrer" aria-label="Facebook"  className="site-footer__social-btn"><IconFacebook/></a>}
+              {info.instagram && <a href={info.instagram} target="_blank" rel="noreferrer" aria-label="Instagram" className="site-footer__social-btn"><IconInstagram/></a>}
+              {info.youtube   && <a href={info.youtube}   target="_blank" rel="noreferrer" aria-label="YouTube"   className="site-footer__social-btn"><IconYoutube/></a>}
+            </div>
+          )}
+        </div>
+
+        {/* Bloc 2 — Plan du site */}
+        <div className="site-footer__col">
+          <h4 className="site-footer__heading">Plan du site</h4>
+          <ul className="site-footer__links">
+            {NAV_PLAN.map(({ label, page, disabled }) => (
+              <li key={page}>
+                {disabled
+                  ? <span className="site-footer__link site-footer__link--muted">{label}</span>
+                  : <button className="site-footer__link" onClick={() => navigate(page)}>{label}</button>
+                }
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Bloc 3 — Règlement */}
+        <div className="site-footer__col">
+          <h4 className="site-footer__heading">Règlement</h4>
+          <ul className="site-footer__links">
+            {info.reglementUrl
+              ? <li><a href={info.reglementUrl} target="_blank" rel="noreferrer" className="site-footer__link">Règlement général</a></li>
+              : <li><span className="site-footer__link site-footer__link--muted">Bientôt disponible</span></li>
+            }
+            <li><button className="site-footer__link" onClick={() => navigate('courses')}>Règlement des courses</button></li>
+            <li><span className="site-footer__link site-footer__link--muted">Informations pratiques</span></li>
+            <li><button className="site-footer__link" onClick={() => navigate('contact')}>Nous contacter</button></li>
+          </ul>
+        </div>
+
+      </div>
+
+      {/* Barre copyright */}
+      <div className="site-footer__bar">
+        <span>{copyright.split('õ').map((part, i) => i === 0 ? part : <React.Fragment key={i}><em>õ</em>{part}</React.Fragment>)}</span>
+      </div>
+    </footer>
+  );
+}
+
 /* ── App ─── */
 function App() {
-  const [showIntro,setShowIntro]=useState(()=>{ if(localStorage.getItem('oo_site_entered')) return false; return Date.now()<SITE_OPEN.getTime(); });
+  const [showIntro,setShowIntro]=useState(()=>{ if(new URLSearchParams(window.location.search).get('preview')==='1') return false; if(localStorage.getItem('oo_site_entered')) return false; return Date.now()<SITE_OPEN.getTime(); });
   const [page,setPage]=useState(pageFromPath);
   const [menuOpen,setMenuOpen]=useState(false);
   const navigate=p=>{
@@ -1214,13 +1494,38 @@ function App() {
   };
   useEffect(()=>{ window.scrollTo({top:0,behavior:'instant'}); },[page]);
   useEffect(()=>{
+    const titles = {
+      accueil:     SEO_BASE.title || `Aux õrigines – Trail Nature – Sernhac ${EVENT_YEAR}`,
+      evenement:   `L'Événement – Aux õrigines ${EVENT_YEAR}`,
+      courses:     `Les Courses – Aux õrigines ${EVENT_YEAR}`,
+      vallon:      `Le Vallon de Sernhac – Aux õrigines ${EVENT_YEAR}`,
+      artisans:    `Marché d'Artisans – Aux õrigines ${EVENT_YEAR}`,
+      galerie:     `Galerie – Aux õrigines ${EVENT_YEAR}`,
+      partenaires: `Partenaires – Aux õrigines ${EVENT_YEAR}`,
+      actualites:  `Actualités – Aux õrigines ${EVENT_YEAR}`,
+      contact:     `Contact – Aux õrigines ${EVENT_YEAR}`,
+      infos:       `Infos pratiques – Aux õrigines ${EVENT_YEAR}`,
+    };
+    if (page.startsWith('course/')) {
+      const slug = page.slice(7);
+      const race = RACES.find(r => r.urlSlug === slug);
+      document.title = race ? `${race.name} – Aux õrigines ${EVENT_YEAR}` : titles.accueil;
+    } else {
+      document.title = titles[page] || titles.accueil;
+    }
+  },[page]);
+  useEffect(()=>{
     const onPop=()=>setPage(pageFromPath());
     window.addEventListener('popstate',onPop);
     return ()=>window.removeEventListener('popstate',onPop);
   },[]);
+  const [consent, setConsent] = useState(() => localStorage.getItem('oo_cookie_consent'));
+  const accept = () => { localStorage.setItem('oo_cookie_consent','all');       setConsent('all'); };
+  const refuse = () => { localStorage.setItem('oo_cookie_consent','essential'); setConsent('essential'); };
   const enterSite=()=>{ localStorage.setItem('oo_site_entered','1'); setShowIntro(false); };
   if(showIntro) return <IntroScreen onEnter={enterSite}/>;
   return (
+    <CookieConsentCtx.Provider value={{consent, accept, refuse}}>
     <div className="site">
       <TopBar navigate={navigate}/>
       <Nav navigate={navigate} menuOpen={menuOpen} setMenuOpen={setMenuOpen}/>
@@ -1228,14 +1533,17 @@ function App() {
       {page==='evenement'   && <PageEvenement   navigate={navigate}/>}
       {page==='infos'       && <PageInfos       navigate={navigate}/>}
       {page==='courses'     && <PageCourses     navigate={navigate}/>}
-      {RACES.map(r=>page==='course_'+r.id && <PageCourseDetail key={r.id} race={r} navigate={navigate}/>)}
+      {RACES.map(r=>page===`course/${r.urlSlug}` && <PageCourseDetail key={r.id} race={r} navigate={navigate}/>)}
       {page==='vallon'      && <PageVallon      navigate={navigate}/>}
       {page==='artisans'    && <PageArtisans    navigate={navigate}/>}
       {page==='partenaires' && <PagePartenaires navigate={navigate}/>}
       {page==='galerie'     && <PageGalerie     navigate={navigate}/>}
+      {page==='actualites'  && <PageActualites  navigate={navigate}/>}
       {page==='contact'     && <PageContact     navigate={navigate}/>}
-      <footer>© 2027 <em>õ</em> origines · Sernhac · Gard · Tous droits réservés</footer>
+      <Footer navigate={navigate}/>
+      {consent === null && <CookieBanner onAccept={accept} onRefuse={refuse}/>}
     </div>
+    </CookieConsentCtx.Provider>
   );
 }
 

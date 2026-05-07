@@ -24,7 +24,8 @@ class PartenaireResource extends Resource
             Forms\Components\Select::make('niveau')
                 ->options(['Or' => 'Or', 'Argent' => 'Argent', 'Bronze' => 'Bronze', 'Institutionnel' => 'Institutionnel'])
                 ->required(),
-            Forms\Components\FileUpload::make('logo')->image()->directory('partenaires'),
+            Forms\Components\FileUpload::make('logo')->image()->directory('partenaires')
+                ->acceptedFileTypes(['image/jpeg','image/png','image/webp','image/svg+xml'])->maxSize(2048),
             Forms\Components\TextInput::make('site_web')->url()->prefix('https://'),
             Forms\Components\TextInput::make('ordre')->numeric()->default(0),
             Forms\Components\Toggle::make('visible')->default(true),

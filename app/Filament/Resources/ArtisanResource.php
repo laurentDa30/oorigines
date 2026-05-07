@@ -37,7 +37,8 @@ class ArtisanResource extends Resource
                 'Autre'                  => 'Autre',
             ]),
             Forms\Components\Textarea::make('description')->rows(4)->columnSpanFull(),
-            Forms\Components\FileUpload::make('logo')->image()->directory('artisans'),
+            Forms\Components\FileUpload::make('logo')->image()->directory('artisans')
+                ->acceptedFileTypes(['image/jpeg','image/png','image/webp','image/svg+xml'])->maxSize(2048),
             Forms\Components\TextInput::make('site_web')->url()->prefix('https://'),
             Forms\Components\TextInput::make('instagram')->prefix('@'),
             Forms\Components\TextInput::make('ordre')->numeric()->default(0),

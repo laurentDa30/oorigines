@@ -1,3 +1,19 @@
+<IfModule mod_headers.c>
+    # Empêche le sniffing de type MIME
+    Header always set X-Content-Type-Options "nosniff"
+    # Empêche l'affichage dans une iframe (clickjacking)
+    Header always set X-Frame-Options "SAMEORIGIN"
+    # Contrôle l'information envoyée dans le Referer
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    # Désactive les fonctionnalités navigateur non utilisées
+    Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+    # Force HTTPS pendant 1 an (activer uniquement quand HTTPS opérationnel)
+    # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    # Supprime la signature du serveur
+    Header always unset X-Powered-By
+    Header always unset Server
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes

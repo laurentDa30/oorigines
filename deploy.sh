@@ -1,20 +1,18 @@
 #!/usr/bin/env bash
-# Script de déploiement OVH – õ origines
-# Usage : bash deploy.sh
+# Script de déploiement OVH Pro – õ origines
+# Le build frontend est inclus dans le dépôt Git (public/build/)
+# Usage SSH : bash deploy.sh
 
 set -e
 
 echo "→ Récupération du code..."
 git pull origin main
 
-echo "→ Installation des dépendances PHP..."
+echo "→ Dépendances PHP..."
 composer install --no-dev --optimize-autoloader
 
 echo "→ Migrations..."
-php artisan migrate --force --seed
-
-echo "→ Build frontend..."
-npm ci && npm run build
+php artisan migrate --force
 
 echo "→ Cache production..."
 php artisan config:cache

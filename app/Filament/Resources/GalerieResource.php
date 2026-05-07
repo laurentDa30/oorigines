@@ -24,8 +24,12 @@ class GalerieResource extends Resource
             Forms\Components\TextInput::make('annee')->numeric()->minValue(2020)->maxValue(2100),
             Forms\Components\Select::make('type')->options(['Photo' => 'Photo', 'Video' => 'Vidéo'])->required()->live(),
             Forms\Components\FileUpload::make('image')->image()->directory('galerie')->disk('public')->visibility('public')
+                ->acceptedFileTypes(['image/jpeg','image/png','image/webp'])->maxSize(8192)
                 ->visible(fn (Forms\Get $get) => $get('type') === 'Photo'),
             Forms\Components\TextInput::make('url_video')->url()
+                ->visible(fn (Forms\Get $get) => $get('type') === 'Video'),
+            Forms\Components\Toggle::make('video_accueil')->label('Vidéo page d\'accueil')
+                ->helperText('Afficher cette vidéo dans la section vidéo de la page d\'accueil')
                 ->visible(fn (Forms\Get $get) => $get('type') === 'Video'),
             Forms\Components\TextInput::make('ordre')->numeric()->default(0),
             Forms\Components\Toggle::make('featured')->label('Mise en avant'),
@@ -40,6 +44,7 @@ class GalerieResource extends Resource
                 Tables\Columns\TextColumn::make('titre')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('annee')->sortable(),
                 Tables\Columns\TextColumn::make('type')->badge(),
+                Tables\Columns\IconColumn::make('video_accueil')->boolean()->label('Accueil'),
                 Tables\Columns\IconColumn::make('featured')->boolean()->label('Vedette'),
                 Tables\Columns\TextColumn::make('ordre')->sortable(),
             ])

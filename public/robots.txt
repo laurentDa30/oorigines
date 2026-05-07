@@ -1,2 +1,7 @@
 User-agent: *
-Disallow:
+Disallow: /gestion-origines
+Disallow: /admin
+Disallow: /storage/
+Disallow: /infos
+
+Sitemap: https://www.aux-origines.fr/sitemap.xml
