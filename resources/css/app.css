@@ -139,9 +139,10 @@ h2.sec-title em { color:var(--tc); font-style:normal; }
 .sec-rule { width:56px; height:3px; background:var(--tc); margin-bottom:36px; }
 p.body { font-size:clamp(16px,1.4vw,19px); line-height:1.85; color:oklch(28% .04 38); margin-bottom:18px; }
 .split { display:grid; grid-template-columns:1fr 1fr; gap:72px; align-items:center; }
-.split img { width:100%; height:380px; object-fit:cover; display:block; position:relative; z-index:1; }
-.image-frame { position:relative; margin-bottom:18px; margin-right:18px; }
-.image-frame::after { content:''; position:absolute; top:18px; left:18px; right:-18px; bottom:-18px; background:white; box-shadow:0 6px 32px oklch(14% .04 38 / .12); z-index:0; }
+.split img { width:calc(100% + 80px); height:420px; object-fit:cover; display:block; position:relative; z-index:1; border-radius:16px 0 0 16px; box-shadow:0 24px 64px oklch(14% .04 38 / .28); }
+.image-frame { position:relative; margin-bottom:20px; }
+.image-frame::after { content:''; position:absolute; top:20px; left:20px; right:-20px; bottom:-20px; border-radius:16px 0 0 16px; background:var(--tc); opacity:.2; z-index:0; }
+.image-frame img { position:relative; z-index:1; }
 @media(max-width:768px){ .split{grid-template-columns:1fr;gap:36px;} .split img{height:240px;} .wrap{padding:104px 24px;} .image-frame{margin-bottom:12px;margin-right:12px;} .image-frame::after{top:12px;left:12px;right:-12px;bottom:-12px;} }
 
 /* ── PROGRAM ─── */

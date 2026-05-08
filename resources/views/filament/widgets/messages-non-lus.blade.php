@@ -8,7 +8,7 @@
                 <span class="inline-flex items-center justify-center rounded-full bg-red-600 px-2 py-0.5 text-xs font-bold text-warning">
                     {{ $count }}
                 </span>
-                {{ Str::plural('message', $count) }} non {{ $count > 1 ? 'lus' : 'lu' }} — cliquez pour les consulter.
+                {{ Str::plural('message', $count) }} non {{ $count > 1 ? 'lus' : 'lu' }} - cliquez pour les consulter.
             </p>
         </div>
     </a>

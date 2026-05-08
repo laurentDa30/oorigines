@@ -1,6 +1,6 @@
 import './bootstrap';
 import React, { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { createRoot } from 'react-dom/client';
 import DOMPurify from 'dompurify';
 
@@ -144,7 +144,7 @@ function TopBar({ navigate }) {
 }
 
 /* ── Nav ─── */
-function Nav({ navigate, menuOpen, setMenuOpen }) {
+function Nav({ navigate, page, menuOpen, setMenuOpen }) {
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY>60);
@@ -167,9 +167,10 @@ function Nav({ navigate, menuOpen, setMenuOpen }) {
   ];
   const linksLeft  = links.slice(0,4);
   const linksRight = links.slice(4);
+  const isActive = id => id==='courses' ? (page==='courses'||page.startsWith('course/')) : id==='evenement' ? (page==='evenement'||page==='infos') : page===id;
   const renderLink = ([id,lbl,sub]) => (
     <li key={id} className={sub?'has-sub':''}>
-      <a onClick={()=>{ if(!sub) go(id); }} style={sub?{cursor:'default'}:{}}>{lbl}{sub&&<span className="nav-chevron">▾</span>}</a>
+      <a onClick={()=>{ if(!sub) go(id); }} style={{...(sub?{cursor:'default'}:{}), ...(isActive(id)?{color:'var(--tc)'}:{})}}>{lbl}{sub&&<span className="nav-chevron">▾</span>}</a>
       {sub&&(
         <ul className="sub-nav">
           {sub.map(([sid,slbl])=>(
@@ -247,7 +248,7 @@ function CookieBanner({ onAccept, onRefuse }) {
       <div style={{flex:'1 1 320px',minWidth:0}}>
         <p style={{fontFamily:"'Cinzel',serif",fontSize:11,letterSpacing:'.2em',textTransform:'uppercase',color:'var(--ocre)',marginBottom:6}}>Cookies & confidentialité</p>
         <p style={{fontFamily:"'EB Garamond',serif",fontSize:15,color:'oklch(75% .04 68)',lineHeight:1.6}}>
-          <strong style={{color:'white',fontStyle:'normal'}}>Aux õrigines ne collecte aucune information personnelle lors de votre visite.</strong>{' '}
+          <strong style={{color:'white',fontStyle:'normal'}}>Aux Õrigines ne collecte aucune information personnelle lors de votre visite.</strong>{' '}
           Ce site utilise uniquement des cookies techniques nécessaires et des cookies tiers optionnels via <strong style={{color:'white'}}>YouTube</strong> et <strong style={{color:'white'}}>Google Fonts</strong>. Vous pouvez les refuser sans aucun impact sur votre navigation.
         </p>
       </div>
@@ -329,8 +330,11 @@ function PhotoCard({ src, alt, titre, position, isLoaded, index, onClick }) {
   );
 }
 
+
+
 function SectionGalerieHome({ navigate }) {
   const [isLoaded, setIsLoaded] = useState(false);
+  const sectionRef = useRef(null);
   const photos = GALERIE.filter(g => g.image).slice(0, 5);
 
   const POSITIONS = [
@@ -342,12 +346,17 @@ function SectionGalerieHome({ navigate }) {
   ];
 
   useEffect(() => {
-    const t = setTimeout(() => setIsLoaded(true), 700);
-    return () => clearTimeout(t);
+    const el = sectionRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) { setIsLoaded(true); obs.disconnect(); }
+    }, { threshold: 0.55, rootMargin: '0px 0px -10% 0px' });
+    obs.observe(el);
+    return () => obs.disconnect();
   }, []);
 
   return (
-    <div style={{background:'oklch(17% 0.05 55)',padding:'clamp(56px,8vw,96px) clamp(20px,4vw,48px)',overflow:'hidden',borderTop:'3px solid var(--tc)',boxShadow:'inset 0 8px 32px oklch(0% 0 0 / .3)'}}>
+    <div ref={sectionRef} style={{background:'oklch(17% 0.05 55)',padding:'clamp(56px,8vw,96px) clamp(20px,4vw,48px)',overflow:'hidden',borderTop:'3px solid var(--tc)',boxShadow:'inset 0 8px 32px oklch(0% 0 0 / .3)'}}>
       <div style={{maxWidth:1160,margin:'0 auto'}}>
         <div style={{textAlign:'center',marginBottom:52}}>
           <div className="sec-tag" style={{color:'var(--ocre)'}}>Galerie</div>
@@ -537,16 +546,16 @@ function PageAccueil({ navigate }) {
 /* ── Page Événement ─── */
 function PageEvenement({ navigate }) {
   const PROGRAMME = [
-    ['10h00',"Ouverture du site · Accueil des participants",false],
+    ['11h00',"Ouverture du site · Accueil des participants",false],
+    ['14h00',"Départ Irréductibles'Kid trail",false],
     ['15h00',"Départ Trail 20km – Astra'trail",false],
-    ['15h30',"Départ 12km – Sarnacum'trail",false],
+    ['15h45',"Départ 12km – Sarnacum'trail",false],
+    ['16h00',"Départ Marche Nordique",false],
     ['16h30',"Départ 12km marche",false],
     ['16h15',"Estimation - premiers finishers 12km",true],
-    ['16h00',"Départ Marche Nordique trail",false],
-    ['14h00',"Départ Irréductibles'Kid trail",false],
-    ['16h15',"Estimation - premiers finishers Trail 20km",true],
-    ['18h00',"Remise des récompenses – Trail 20km",false],
-    ['21h00',`Concert, clôture de l'édition ${EVENT_YEAR}`,false],
+    ['16h20',"Estimation - premiers finishers Trail 20km",true],
+    ['18h00',"Remise des récompenses",false],
+    ['20h00',`Concert, clôture de l'édition ${EVENT_YEAR}`,false],
   ];
   return (
     <>
@@ -555,24 +564,25 @@ function PageEvenement({ navigate }) {
 
         <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',paddingTop:112}}>
           <div className="hero-eyebrow">L'Événement</div>
-          <h1 className="hero-title" style={{fontSize:'clamp(40px,7vw,90px)'}}><em>õ</em> õrigines</h1>
+          <h1 className="hero-title" style={{fontSize:'clamp(40px,7vw,90px)'}}>Aux <em>õ</em>rigines</h1>
         </div>
       </div>
       <div className="wrap">
         <div className="split" style={{marginBottom:60}}>
           <div>
-            <div className="sec-tag">Le Site</div>
-            <h2 className="sec-title">Un cadre <em>exceptionnel</em></h2>
+            <div className="sec-tag">L'Épreuve</div>
+            <h2 className="sec-title">Un trail <em>technique</em></h2>
             <div className="sec-rule"/>
-            <p className="body">Le Vallon de Sernhac est un site naturel préservé, marqué par des siècles d'histoire. Ses falaises calcaires, ses oliviers centenaires et ses vestiges antiques forment un écrin unique pour un événement sportif et culturel d'exception.</p>
-            <p className="body">L'événement puise son inspiration dans l'époque romaine qui a profondément marqué cette région. Les coureurs traverseront des paysages que les légions romaines ont foulés il y a deux millénaires.</p>
+            <p className="body">Le Vallon de Sernhac n'est pas un terrain ordinaire. Falaises calcaires, sous-bois denses, sentiers escarpés et passages en crête — les parcours mettent à l'épreuve l'équilibre, la lecture du terrain et l'endurance. Chaque foulée se mérite.</p>
+            <p className="body">Du 20 km engagé pour les coureurs aguerris au 12 km accessible, en passant par le trail enfants et la marche nordique, l'événement accueille tous les niveaux sur des tracés où la nature reste maîtresse.</p>
+            <button className="btn-primary" onClick={()=>navigate('courses')} style={{marginTop:8}}>Voir les courses</button>
           </div>
           <div>
             <div className="sec-tag">L'Esprit</div>
-            <h2 className="sec-title">Une fête <em>populaire</em></h2>
+            <h2 className="sec-title">Au-delà de <em>l'effort</em></h2>
             <div className="sec-rule"/>
-            <p className="body">Porté par les habitants de Sernhac et les associations locales, aux õrigines est avant tout une fête populaire. L'objectif : rassembler sportifs, familles et amoureux du patrimoine autour d'une journée festive et authentique.</p>
-            <p className="body">Marché d'artisans, animations d'époque, restauration sur place et ambiance chaleureuse garantie tout au long de la journée.</p>
+            <p className="body">L'effort passé la ligne d'arrivée, l'événement continue. Porté par les habitants de Sernhac et les associations locales, aux õrigines est aussi une fête populaire : marché d'artisans, animations, restauration sur place et remise des récompenses en fin de journée.</p>
+            <p className="body">Une journée qui mêle défi personnel et convivialité, dans un cadre naturel où l'histoire romaine de la région n'est jamais très loin.</p>
           </div>
         </div>
         <div className="prog-block">
@@ -594,10 +604,10 @@ function PageEvenement({ navigate }) {
         <div style={{position:'relative',maxWidth:1160,margin:'0 auto',display:'flex',justifyContent:'flex-end',width:'100%'}}>
           <div style={{background:'oklch(10% .04 38 / .92)',padding:'clamp(28px,4vw,52px)',maxWidth:560,borderLeft:'4px solid var(--tc)',width:'100%'}}>
             <div className="sec-tag">L'Atmosphère</div>
-            <h2 className="sec-title" style={{color:'var(--cream)'}}>Là où l'histoire <em>se court</em></h2>
+            <h2 className="sec-title" style={{color:'var(--cream)'}}>Courir là où <em>tout a commencé</em></h2>
             <div className="sec-rule"/>
-            <p style={{fontSize:'clamp(16px,1.4vw,19px)',lineHeight:1.85,color:'oklch(68% .03 68)',marginBottom:18}}>Chaque kilomètre parcouru sur les sentiers du Vallon est une plongée dans l'histoire. Les pierres calcaires, les terrasses romaines et les oliviers millénaires témoignent d'un passé vivant.</p>
-            <p style={{fontSize:'clamp(16px,1.4vw,19px)',lineHeight:1.85,color:'oklch(68% .03 68)'}}>Venir à aux õrigines, c'est bien plus que courir — c'est appartenir à quelque chose de plus grand.</p>
+            <p style={{fontSize:'clamp(16px,1.4vw,19px)',lineHeight:1.85,color:'oklch(68% .03 68)',marginBottom:18}}>Les sentiers du Vallon ne sont pas tracés au hasard. Ils suivent des chemins que les Romains ont ouverts il y a deux mille ans. Courir ici, c'est sentir le poids de l'histoire sous chaque appui, entre les falaises et les oliviers centenaires.</p>
+            <p style={{fontSize:'clamp(16px,1.4vw,19px)',lineHeight:1.85,color:'oklch(68% .03 68)'}}>Le terrain est beau, il est dur, il est authentique. Exactement comme il se doit d'être.</p>
           </div>
         </div>
       </div>
@@ -804,17 +814,26 @@ function PagePartenaires({ navigate }) {
         <div className="sec-rule"/>
         <div className="split" style={{marginBottom:52}}>
           <div>
-            <p className="body">aux õrigines est un événement ancré dans le territoire, porté par et pour les habitants de Sernhac et du Gard. En devenant partenaire, vous associez votre image à une journée sportive et culturelle d'exception, dans un cadre naturel unique.</p>
+            <p className="body">Aux Õrigines est un événement ancré dans le territoire, porté par et pour les habitants de Sernhac et du Gard. En devenant partenaire, vous associez votre image à une journée sportive et culturelle d'exception, dans un cadre naturel unique.</p>
             <p className="body">Votre logo apparaît sur tous les supports de communication : site web, affiches, dossards, et le jour J sur les banderoles et le village départ.</p>
-            <button className="btn-primary" onClick={()=>navigate('contact')} style={{marginTop:8}}>Nous contacter pour un partenariat</button>
           </div>
-          <div style={{display:'flex',flexDirection:'column',gap:16}}>
-            {[{tier:'Or',color:'#c49a2a',desc:'Plusieurs choix ?'},{tier:'Argent',color:'#9e9e9e',desc:'Plusieurs choix ?'},{tier:'Bronze',color:'#b5451b',desc:'Plusieurs choix ?'}].map(({tier,color,desc})=>(
-              <div key={tier} style={{background:'var(--paper)',borderLeft:`4px solid ${color}`,padding:'20px 24px',display:'flex',gap:16,alignItems:'center'}}>
-                <div style={{fontFamily:"'Cinzel',serif",fontSize:18,fontWeight:900,color,minWidth:72}}>{tier}</div>
-                <div style={{fontFamily:"'EB Garamond',serif",fontSize:15,color:'oklch(30% .04 38)',lineHeight:1.6}}>{desc}</div>
-              </div>
-            ))}
+          <div style={{background:'var(--paper)',padding:'clamp(20px,3vw,36px)',borderLeft:'4px solid var(--tc)'}}>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:'.4em',textTransform:'uppercase',color:'var(--tc)',marginBottom:18}}>Niveaux de partenariat</div>
+            <p className="body" style={{marginBottom:20}}>Associez votre image à une journée sportive et culturelle d'exception. Voici ce que votre partenariat apporte concrètement.</p>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:9,letterSpacing:'.25em',textTransform:'uppercase',color:'var(--tc)',marginBottom:10}}>Ce que vous gagnez</div>
+            <ul style={{listStyle:'none',padding:0,margin:'0 0 24px',display:'flex',flexDirection:'column',gap:8}}>
+              {[
+                ['📣','Communication sur nos réseaux sociaux avant et pendant l\'événement'],
+                ['🌐','Fiche partenaire sur ce site avec logo et lien vers votre structure'],
+                ['🎙️','Mention orale par l\'animateur le jour J sur le village départ'],
+              ].map(([icon,txt])=>(
+                <li key={txt} style={{display:'flex',gap:10,alignItems:'flex-start'}}>
+                  <span style={{fontSize:16,lineHeight:1.4,flexShrink:0}}>{icon}</span>
+                  <span style={{fontSize:14,color:'oklch(55% .04 68)',lineHeight:1.55}}>{txt}</span>
+                </li>
+              ))}
+            </ul>
+            <button className="btn-primary" onClick={()=>navigate('contact')}>Nous contacter pour un partenariat</button>
           </div>
         </div>
       </div>
@@ -949,12 +968,25 @@ function PageArtisans({ navigate }) {
         <div className="sec-rule"/>
         <div className="split" style={{marginBottom:52}}>
           <div>
-            <p className="body">Aux õrigines accueille un marché d'artisans locaux au cœur du Vallon. Potiers, tisserands, producteurs du terroir... Tous partagent un même attachement au savoir-faire authentique et à la création manuelle.</p>
-            <p className="body">Dans l'esprit de la tradition romaine, les artisans proposeront leurs créations dans un cadre évocateur, entre les oliviers et les falaises calcaires.</p>
+            <p className="body">Aux Õrigines accueille un marché d'artisans locaux au cœur du Vallon. Potiers, tisserands, producteurs du terroir... Tous partagent un même attachement au savoir-faire authentique et à la création manuelle.</p>
+            <p className="body">Dans l'esprit de la tradition artisane, les artisans proposeront leurs créations dans un cadre évocateur, entre les oliviers et les falaises calcaires.</p>
           </div>
           <div style={{background:'var(--paper)',padding:'clamp(20px,3vw,36px)',borderLeft:'4px solid var(--tc)'}}>
             <div style={{fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:'.4em',textTransform:'uppercase',color:'var(--tc)',marginBottom:18}}>Vous êtes artisan ?</div>
-            <p className="body" style={{marginBottom:20}}>Les emplacements sont gratuits pour les artisans de la région gardoise. Rejoignez l'édition {EVENT_YEAR}.</p>
+            <p className="body" style={{marginBottom:16}}>Rejoignez le marché de l'édition {EVENT_YEAR}. L'emplacement est <strong>gratuit</strong> pour les artisans sernhacois, et une participation de <strong>5 €</strong> est demandée pour les autres exposants.</p>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:9,letterSpacing:'.25em',textTransform:'uppercase',color:'var(--tc)',marginBottom:10}}>Ce que vous gagnez</div>
+            <ul style={{listStyle:'none',padding:0,margin:'0 0 24px',display:'flex',flexDirection:'column',gap:8}}>
+              {[
+                ['📣','Mise en avant sur nos réseaux sociaux avant et pendant l\'événement'],
+                ['🌐','Fiche dédiée sur ce site avec votre nom, catégorie et liens'],
+                ['🎙️','Présentation orale de votre stand lors des annonces sur le site'],
+              ].map(([icon, txt]) => (
+                <li key={txt} style={{display:'flex',gap:10,alignItems:'flex-start'}}>
+                  <span style={{fontSize:16,lineHeight:1.4,flexShrink:0}}>{icon}</span>
+                  <span style={{fontSize:14,color:'oklch(55% .04 68)',lineHeight:1.55}}>{txt}</span>
+                </li>
+              ))}
+            </ul>
             <button className="btn-primary" onClick={()=>navigate('contact')}>Réserver un emplacement</button>
           </div>
         </div>
@@ -1136,7 +1168,7 @@ function PageContact({ navigate }) {
           <div className="ci">
             <div>
               <div style={{fontFamily:"'Cinzel',serif",fontWeight:700,fontSize:20,marginBottom:6}}>Organisation</div>
-              <div style={{fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:'.3em',textTransform:'uppercase',color:'var(--tc)',marginBottom:20}}>Aux õrigines – Sernhac {EVENT_YEAR}</div>
+              <div style={{fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:'.3em',textTransform:'uppercase',color:'var(--tc)',marginBottom:20}}>Aux Õrigines – Sernhac {EVENT_YEAR}</div>
             </div>
             {[
               [<LocationIcon/>,'Lieu',   SITE_INFO.adresse   || 'Le Vallon · 30210 Sernhac, Gard'],
@@ -1413,7 +1445,7 @@ function IconYoutube() {
 
 function Footer({ navigate }) {
   const info = SITE_INFO;
-  const copyright = info.copyright || `© ${new Date().getFullYear()} aux õrigines · Sernhac · Gard · Tous droits réservés`;
+  const copyright = info.copyright || `© ${new Date().getFullYear()} aux Õrigines · Sernhac · Gard · Tous droits réservés`;
 
   return (
     <footer className="site-footer">
@@ -1495,21 +1527,21 @@ function App() {
   useEffect(()=>{ window.scrollTo({top:0,behavior:'instant'}); },[page]);
   useEffect(()=>{
     const titles = {
-      accueil:     SEO_BASE.title || `Aux õrigines – Trail Nature – Sernhac ${EVENT_YEAR}`,
-      evenement:   `L'Événement – Aux õrigines ${EVENT_YEAR}`,
-      courses:     `Les Courses – Aux õrigines ${EVENT_YEAR}`,
-      vallon:      `Le Vallon de Sernhac – Aux õrigines ${EVENT_YEAR}`,
-      artisans:    `Marché d'Artisans – Aux õrigines ${EVENT_YEAR}`,
-      galerie:     `Galerie – Aux õrigines ${EVENT_YEAR}`,
-      partenaires: `Partenaires – Aux õrigines ${EVENT_YEAR}`,
-      actualites:  `Actualités – Aux õrigines ${EVENT_YEAR}`,
-      contact:     `Contact – Aux õrigines ${EVENT_YEAR}`,
-      infos:       `Infos pratiques – Aux õrigines ${EVENT_YEAR}`,
+      accueil:     SEO_BASE.title || `Aux Õrigines – Trail Nature – Sernhac ${EVENT_YEAR}`,
+      evenement:   `L'Événement – Aux Õrigines ${EVENT_YEAR}`,
+      courses:     `Les Courses – Aux Õrigines ${EVENT_YEAR}`,
+      vallon:      `Le Vallon de Sernhac – Aux Õrigines ${EVENT_YEAR}`,
+      artisans:    `Marché d'Artisans – Aux Õrigines ${EVENT_YEAR}`,
+      galerie:     `Galerie – Aux Õrigines ${EVENT_YEAR}`,
+      partenaires: `Partenaires – Aux Õrigines ${EVENT_YEAR}`,
+      actualites:  `Actualités – Aux Õrigines ${EVENT_YEAR}`,
+      contact:     `Contact – Aux Õrigines ${EVENT_YEAR}`,
+      infos:       `Infos pratiques – Aux Õrigines ${EVENT_YEAR}`,
     };
     if (page.startsWith('course/')) {
       const slug = page.slice(7);
       const race = RACES.find(r => r.urlSlug === slug);
-      document.title = race ? `${race.name} – Aux õrigines ${EVENT_YEAR}` : titles.accueil;
+      document.title = race ? `${race.name} – Aux Õrigines ${EVENT_YEAR}` : titles.accueil;
     } else {
       document.title = titles[page] || titles.accueil;
     }
@@ -1528,19 +1560,29 @@ function App() {
     <CookieConsentCtx.Provider value={{consent, accept, refuse}}>
     <div className="site">
       <TopBar navigate={navigate}/>
-      <Nav navigate={navigate} menuOpen={menuOpen} setMenuOpen={setMenuOpen}/>
-      {page==='accueil'     && <PageAccueil     navigate={navigate}/>}
-      {page==='evenement'   && <PageEvenement   navigate={navigate}/>}
-      {page==='infos'       && <PageInfos       navigate={navigate}/>}
-      {page==='courses'     && <PageCourses     navigate={navigate}/>}
-      {RACES.map(r=>page===`course/${r.urlSlug}` && <PageCourseDetail key={r.id} race={r} navigate={navigate}/>)}
-      {page==='vallon'      && <PageVallon      navigate={navigate}/>}
-      {page==='artisans'    && <PageArtisans    navigate={navigate}/>}
-      {page==='partenaires' && <PagePartenaires navigate={navigate}/>}
-      {page==='galerie'     && <PageGalerie     navigate={navigate}/>}
-      {page==='actualites'  && <PageActualites  navigate={navigate}/>}
-      {page==='contact'     && <PageContact     navigate={navigate}/>}
-      <Footer navigate={navigate}/>
+      <Nav navigate={navigate} page={page} menuOpen={menuOpen} setMenuOpen={setMenuOpen}/>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={page}
+          initial={{opacity:0, y:18}}
+          animate={{opacity:1, y:0}}
+          exit={{opacity:0, y:-10}}
+          transition={{duration:0.32, ease:'easeOut'}}
+        >
+          {page==='accueil'     && <PageAccueil     navigate={navigate}/>}
+          {page==='evenement'   && <PageEvenement   navigate={navigate}/>}
+          {page==='infos'       && <PageInfos       navigate={navigate}/>}
+          {page==='courses'     && <PageCourses     navigate={navigate}/>}
+          {RACES.map(r=>page===`course/${r.urlSlug}` && <PageCourseDetail key={r.id} race={r} navigate={navigate}/>)}
+          {page==='vallon'      && <PageVallon      navigate={navigate}/>}
+          {page==='artisans'    && <PageArtisans    navigate={navigate}/>}
+          {page==='partenaires' && <PagePartenaires navigate={navigate}/>}
+          {page==='galerie'     && <PageGalerie     navigate={navigate}/>}
+          {page==='actualites'  && <PageActualites  navigate={navigate}/>}
+          {page==='contact'     && <PageContact     navigate={navigate}/>}
+          <Footer navigate={navigate}/>
+        </motion.div>
+      </AnimatePresence>
       {consent === null && <CookieBanner onAccept={accept} onRefuse={refuse}/>}
     </div>
     </CookieConsentCtx.Provider>
