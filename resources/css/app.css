@@ -143,7 +143,7 @@ p.body { font-size:clamp(16px,1.4vw,19px); line-height:1.85; color:oklch(28% .04
 .image-frame { position:relative; margin-bottom:20px; }
 .image-frame::after { content:''; position:absolute; top:20px; left:20px; right:-20px; bottom:-20px; border-radius:16px 0 0 16px; background:var(--tc); opacity:.2; z-index:0; }
 .image-frame img { position:relative; z-index:1; }
-@media(max-width:768px){ .split{grid-template-columns:1fr;gap:36px;} .split img{height:240px;} .wrap{padding:104px 24px;} .image-frame{margin-bottom:12px;margin-right:12px;} .image-frame::after{top:12px;left:12px;right:-12px;bottom:-12px;} }
+@media(max-width:768px){ .split{grid-template-columns:1fr;gap:36px;} .split img{height:240px;width:100%;} .wrap{padding:104px 24px;} .image-frame{margin-bottom:12px;margin-right:0;overflow:hidden;} .image-frame::after{top:12px;left:12px;right:0;bottom:-12px;} }
 
 /* ── PROGRAM ─── */
 .prog-block { background:var(--paper); border-left:4px solid var(--tc); padding:40px 48px; margin-top:52px; }
