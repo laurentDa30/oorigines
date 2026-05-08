@@ -17,7 +17,8 @@ class User extends Authenticatable implements FilamentUser
 
     public function canAccessPanel(Panel $panel): bool
     {
-        $allowed = array_filter(array_map('trim', explode(',', env('FILAMENT_ADMIN_EMAILS', ''))));
+        $raw     = env('FILAMENT_ADMIN_EMAILS', 'admin@admin.fr');
+        $allowed = array_filter(array_map('trim', explode(',', $raw)));
         return in_array($this->email, $allowed);
     }
 
