@@ -27,7 +27,7 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->default()
             ->id('admin')
-            ->path(env('ADMIN_PATH', 'admin'))
+            ->path(env('ADMIN_PATH', 'gestion-origines'))
             ->login(Login::class)
             ->colors([
                 'primary' => Color::Amber,
