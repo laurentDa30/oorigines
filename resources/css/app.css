@@ -45,6 +45,20 @@ body { font-family: var(--fb); background: var(--cream); color: var(--dark); ove
 .cdown-sep { font-family:var(--ff); font-size:clamp(36px,7vw,80px); color:oklch(35% .05 38); line-height:1; padding-bottom:22px; }
 .btn-enter { font-family:var(--ff); font-size:12px; letter-spacing:.3em; text-transform:uppercase; background:var(--tc); color:white; border:none; padding:16px 44px; cursor:pointer; transition:background .3s; }
 .btn-enter:hover { background:var(--ocre); color:var(--dark); }
+@media(max-width:480px){
+  .intro-inner { width:100%; box-sizing:border-box; padding:0 20px; }
+  .intro-loc { letter-spacing:.18em; font-size:9px; margin-bottom:18px; }
+  .intro-brand { font-size:clamp(44px,13vw,70px); margin-bottom:8px; }
+  .intro-tag { letter-spacing:.18em; font-size:9px; margin-bottom:32px; }
+  .ornament-line { width:36px; }
+  .intro-msg { letter-spacing:.18em; font-size:8px; margin-bottom:14px; }
+  .cdown-row { gap:4px; width:100%; }
+  .cdown-block { flex:1; min-width:0; width:auto; }
+  .cdown-num { font-size:clamp(26px,7.5vw,36px); }
+  .cdown-lbl { font-size:7px; letter-spacing:.1em; }
+  .cdown-sep { font-size:22px; padding-bottom:8px; }
+  .btn-enter { padding:14px 28px; font-size:10px; letter-spacing:.2em; }
+}
 
 /* ── SITE ─── */
 .site { animation: siteIn .9s ease forwards; }
