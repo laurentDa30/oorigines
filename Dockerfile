@@ -37,6 +37,7 @@ RUN npm run build
 RUN chmod -R 775 storage bootstrap/cache
 
 ENV SESSION_DRIVER=cookie
+ENV APP_URL=https://oorigines-production.up.railway.app
 
 EXPOSE 8000
 
