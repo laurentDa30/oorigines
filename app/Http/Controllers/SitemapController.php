@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Actualite;
 use App\Models\Course;
-use App\Models\Setting;
 use Illuminate\Http\Response;
 
 class SitemapController extends Controller
@@ -12,21 +11,19 @@ class SitemapController extends Controller
     public function index(): Response
     {
         $base     = rtrim(config('app.url'), '/');
-        $settings = Setting::first() ?? new Setting();
         $now      = now()->toAtomString();
-
-        $eventDate = $settings->date_evenement?->toAtomString() ?? now()->toAtomString();
 
         $urls = [];
 
         // Pages statiques avec priorité
         $static = [
             ['loc' => $base.'/',              'priority' => '1.0',  'freq' => 'weekly',  'mod' => $now],
-            ['loc' => $base.'/evenement',     'priority' => '0.9',  'freq' => 'monthly', 'mod' => $eventDate],
+            ['loc' => $base.'/evenement',     'priority' => '0.9',  'freq' => 'monthly', 'mod' => $now],
             ['loc' => $base.'/courses',       'priority' => '0.9',  'freq' => 'monthly', 'mod' => $now],
             ['loc' => $base.'/actualites',    'priority' => '0.8',  'freq' => 'weekly',  'mod' => $now],
             ['loc' => $base.'/vallon',        'priority' => '0.7',  'freq' => 'monthly', 'mod' => $now],
             ['loc' => $base.'/artisans',      'priority' => '0.7',  'freq' => 'monthly', 'mod' => $now],
+            ['loc' => $base.'/benevoles',     'priority' => '0.6',  'freq' => 'monthly', 'mod' => $now],
             ['loc' => $base.'/galerie',       'priority' => '0.6',  'freq' => 'monthly', 'mod' => $now],
             ['loc' => $base.'/partenaires',   'priority' => '0.5',  'freq' => 'monthly', 'mod' => $now],
             ['loc' => $base.'/contact',       'priority' => '0.6',  'freq' => 'yearly',  'mod' => $now],

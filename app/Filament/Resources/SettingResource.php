@@ -36,6 +36,100 @@ class SettingResource extends Resource
                         ->columnSpanFull(),
                 ]),
 
+                Forms\Components\Tabs\Tab::make('Programme & sections')->schema([
+                    Forms\Components\Toggle::make('programme_actif')
+                        ->label('Afficher le programme de la journée')
+                        ->helperText('Désactivé : la page Événement affiche « Le programme sera dévoilé prochainement » en conservant l\'encadré.')
+                        ->columnSpanFull(),
+                    Forms\Components\Repeater::make('programme')
+                        ->label('Programme de la journée')
+                        ->helperText('Les lignes s\'affichent dans l\'ordre ci-dessous. Glissez pour réordonner.')
+                        ->schema([
+                            Forms\Components\TextInput::make('heure')
+                                ->label('Heure')
+                                ->placeholder('15h00')
+                                ->required()
+                                ->columnSpan(1),
+                            Forms\Components\TextInput::make('libelle')
+                                ->label('Événement')
+                                ->placeholder("Départ Trail 20km – Astra'trail")
+                                ->required()
+                                ->columnSpan(3),
+                        ])
+                        ->columns(4)
+                        ->reorderable()
+                        ->addActionLabel('Ajouter une ligne')
+                        ->collapsible()
+                        ->itemLabel(fn (array $state): ?string => trim(($state['heure'] ?? '').' · '.($state['libelle'] ?? '')) ?: null)
+                        ->columnSpanFull(),
+                    Forms\Components\Toggle::make('partenaires_actif')
+                        ->label('Afficher la liste des partenaires')
+                        ->helperText('Désactivé : « Partenaires dévoilés prochainement ». Le bloc « Avec le soutien de » (institutionnels) reste toujours affiché.')
+                        ->columnSpanFull(),
+                    Forms\Components\Toggle::make('artisans_actif')
+                        ->label('Afficher la liste des artisans')
+                        ->helperText('Désactivé : « Les artisans seront dévoilés prochainement ».')
+                        ->columnSpanFull(),
+                ]),
+
+                Forms\Components\Tabs\Tab::make('Inscriptions')->schema([
+                    Forms\Components\Toggle::make('inscriptions_actif')
+                        ->label('Les inscriptions sont ouvertes')
+                        ->helperText('Activé : les boutons « Je m\'inscris » du site pointent vers le lien ci-dessous. Désactivé : ils sont grisés et le site annonce la date d\'ouverture.')
+                        ->live()
+                        ->columnSpanFull(),
+                    Forms\Components\TextInput::make('inscriptions_url')
+                        ->label("Lien vers le site d'inscription")
+                        ->url()
+                        ->placeholder('https://www.klikego.com/...')
+                        ->helperText('Obligatoire pour pouvoir ouvrir les inscriptions. Le lien s\'ouvre dans un nouvel onglet.')
+                        ->required(fn (Forms\Get $get) => (bool) $get('inscriptions_actif'))
+                        ->columnSpanFull(),
+                    Forms\Components\DatePicker::make('inscriptions_date_ouverture')
+                        ->label("Date d'ouverture annoncée")
+                        ->displayFormat('d/m/Y')
+                        ->helperText('Affichée sur le site tant que les inscriptions sont fermées : « Les inscriptions ouvriront le 2 octobre 2026 ». Laissez vide pour afficher « prochainement ».')
+                        ->columnSpanFull(),
+                ]),
+
+                Forms\Components\Tabs\Tab::make("Bandeau d'annonce")->schema([
+                    Forms\Components\Toggle::make('announce_actif')
+                        ->label('Afficher le bandeau')
+                        ->helperText('Bandeau d\'info en haut du site (jeu-concours, ouverture des inscriptions, météo jour J…). S\'affiche aussi uniquement dans la période choisie ci-dessous, si renseignée.')
+                        ->columnSpanFull(),
+                    Forms\Components\Textarea::make('announce_message')
+                        ->label('Message')
+                        ->rows(2)
+                        ->maxLength(180)
+                        ->helperText('Message court (une phrase). Les emojis sont autorisés. 180 caractères max.')
+                        ->columnSpanFull(),
+                    Forms\Components\TextInput::make('announce_lien_label')
+                        ->label('Texte du lien (optionnel)')
+                        ->placeholder('Participer'),
+                    Forms\Components\TextInput::make('announce_lien_url')
+                        ->label('URL du lien (optionnel)')
+                        ->url()
+                        ->placeholder('https://www.facebook.com/auxoriginestrail/'),
+                    Forms\Components\Select::make('announce_ton')
+                        ->label('Couleur')
+                        ->options([
+                            'tc'   => 'Terracotta (principal)',
+                            'ocre' => 'Ocre',
+                            'dark' => 'Sombre',
+                        ])
+                        ->default('tc')
+                        ->native(false),
+                    Forms\Components\Placeholder::make('announce_periode_hint')
+                        ->label('')
+                        ->content('Laissez les dates vides pour afficher le bandeau en permanence (tant qu\'il est activé).')
+                        ->columnSpanFull(),
+                    Forms\Components\DateTimePicker::make('announce_debut')
+                        ->label('Début d\'affichage (optionnel)'),
+                    Forms\Components\DateTimePicker::make('announce_fin')
+                        ->label('Fin d\'affichage (optionnel)')
+                        ->after('announce_debut'),
+                ]),
+
                 Forms\Components\Tabs\Tab::make('Infos & contact')->schema([
                     Forms\Components\TextInput::make('adresse')
                         ->label('Adresse')

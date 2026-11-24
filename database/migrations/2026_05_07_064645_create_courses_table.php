@@ -22,10 +22,10 @@ return new class extends Migration
             $table->string('heure_arrivee')->nullable();
             $table->string('denivele')->nullable();
             $table->string('couleur')->default('var(--tc)');
-            $table->json('equipement_obligatoire')->nullable();
-            $table->json('equipement_conseille')->nullable();
-            $table->json('ravitaillement')->nullable();
-            $table->json('profil')->nullable();
+            $table->longText('equipement_obligatoire')->nullable();
+            $table->longText('equipement_conseille')->nullable();
+            $table->longText('ravitaillement')->nullable();
+            $table->longText('profil')->nullable();
             $table->string('tarif')->nullable();
             $table->string('limite')->nullable();
             $table->integer('ordre')->default(0);

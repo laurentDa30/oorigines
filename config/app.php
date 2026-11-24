@@ -56,6 +56,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Panel d'administration
+    |--------------------------------------------------------------------------
+    |
+    | Déclarés ici pour être capturés par `config:cache` : un `env()` lu
+    | hors des fichiers de config renvoie null une fois la config mise en
+    | cache (ce qui verrouillait l'accès admin → 403).
+    |
+    */
+
+    'admin_path' => env('ADMIN_PATH', 'gestion-origines'),
+
+    'filament_admin_emails' => env('FILAMENT_ADMIN_EMAILS', 'admin@admin.fr'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

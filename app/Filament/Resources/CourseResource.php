@@ -29,6 +29,14 @@ class CourseResource extends Resource
                         ->label('Identifiant technique (slug)')->required()
                         ->unique(ignoreRecord: true)
                         ->helperText('Ne pas modifier après création')->maxLength(50),
+                    Forms\Components\Select::make('type_course')
+                        ->label('Type de course')
+                        ->options([
+                            'Trail'           => 'Trail',
+                            'Marche'          => 'Marche',
+                            'Marche Nordique' => 'Marche Nordique',
+                        ])
+                        ->placeholder('Sélectionner un type'),
                     Forms\Components\TextInput::make('categorie')
                         ->label('Catégorie')->placeholder('+18 ans / Tout public / Enfants'),
                     Forms\Components\TextInput::make('tagline')
@@ -59,6 +67,8 @@ class CourseResource extends Resource
                         ->label('Équipement obligatoire')->placeholder('Ajouter un élément…')->columnSpanFull(),
                     Forms\Components\TagsInput::make('equipement_conseille')
                         ->label('Équipement conseillé')->placeholder('Ajouter un élément…')->columnSpanFull(),
+                    Forms\Components\TagsInput::make('materiel_interdit')
+                        ->label('Matériel interdit')->placeholder('Ajouter un élément…')->columnSpanFull(),
                     Forms\Components\TagsInput::make('ravitaillement')
                         ->label('Points de ravitaillement')->placeholder('Ex : Km 6 – à définir')->columnSpanFull(),
                 ]),
@@ -74,6 +84,13 @@ class CourseResource extends Resource
                 Tables\Columns\TextColumn::make('ordre')->label('#')->sortable()->width(50),
                 Tables\Columns\TextColumn::make('nom')->searchable()->sortable()->weight('bold'),
                 Tables\Columns\TextColumn::make('distance_affichee')->label('Distance'),
+                Tables\Columns\TextColumn::make('type_course')->label('Type')->badge()
+                    ->color(fn(string $state): string => match($state) {
+                        'Trail'           => 'warning',
+                        'Marche'          => 'success',
+                        'Marche Nordique' => 'info',
+                        default           => 'gray',
+                    }),
                 Tables\Columns\TextColumn::make('categorie')->label('Catégorie')->badge(),
                 Tables\Columns\TextColumn::make('heure_depart')->label('Départ'),
                 Tables\Columns\TextColumn::make('tarif')->label('Tarif'),

@@ -13,6 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Proxies OVH / hébergeur mutualisé — à restreindre si IPs connues
         $middleware->trustProxies(at: env('TRUSTED_PROXIES', '*'));
+        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\ActualiteResource\Pages;
 use App\Models\Actualite;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -68,9 +69,20 @@ class ActualiteResource extends Resource
                 ->maxLength(500)
                 ->columnSpanFull(),
 
+            FileUpload::make('image')
+                ->label('Image de couverture')
+                ->helperText('Affichée dans la liste et en tête de l\'article.')
+                ->image()
+                ->directory('actualites')->disk('public')->visibility('public')
+                ->acceptedFileTypes(['image/jpeg','image/png','image/webp'])->maxSize(8192)
+                ->columnSpanFull(),
+
             RichEditor::make('contenu')
                 ->label('Contenu complet')
-                ->toolbarButtons(['bold','italic','link','bulletList','orderedList','h2','h3','blockquote','undo','redo'])
+                ->toolbarButtons(['bold','italic','link','attachFiles','bulletList','orderedList','h2','h3','blockquote','undo','redo'])
+                ->fileAttachmentsDisk('public')
+                ->fileAttachmentsDirectory('actualites')
+                ->fileAttachmentsVisibility('public')
                 ->columnSpanFull(),
 
             TextInput::make('ordre')

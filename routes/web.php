@@ -6,4 +6,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/sitemap.xml', [App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
 Route::post('/contact', [ContactController::class, 'send'])->middleware('throttle:5,1')->name('contact.send');
+// Page « Infos pratiques » non terminée : on renvoie vers l'accueil (301 quand elle sera prête → à retirer).
+Route::redirect('/infos', '/');
+
 Route::get('/{any?}', [PageController::class, 'index'])->where('any', '.*')->name('home');

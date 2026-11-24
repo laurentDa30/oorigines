@@ -17,7 +17,7 @@ class PageController extends Controller
     {
         $settings     = Setting::first() ?? new Setting();
         $siteOpen     = $settings->date_ouverture_site ?? now()->addYears(1);
-        $artisanCount = Artisan::count();
+        $artisanCount = Artisan::where('visible', true)->count();
 
         $partenaires = Partenaire::visible()->get(['id','nom','niveau','logo','site_web'])
             ->map(fn($p) => [
@@ -58,7 +58,8 @@ class PageController extends Controller
             'facebook'     => $settings->facebook,
             'instagram'    => $settings->instagram,
             'youtube'      => $settings->youtube,
-            'reglementUrl' => $settings->reglement_url,
+            // Repli sur le PDF déposé dans public/ si le champ admin est vide.
+            'reglementUrl' => $settings->reglement_url ?: '/reglement.pdf',
             'copyright'    => $settings->copyright,
         ];
 
@@ -69,6 +70,7 @@ class PageController extends Controller
                 'categorie'  => $a->categorie,
                 'date_label' => $a->date_label,
                 'extrait'    => $a->extrait,
+                'image'      => $a->image ? '/storage/'.$a->image : null,
                 'contenu'    => $a->contenu,
                 'ordre'      => $a->ordre,
             ]);
@@ -79,6 +81,7 @@ class PageController extends Controller
                 'slug'                   => $c->slug,
                 'nom'                    => $c->nom,
                 'categorie'              => $c->categorie,
+                'type_course'            => $c->type_course,
                 'tagline'                => $c->tagline,
                 'description'            => $c->description,
                 'distance_val'           => $c->distance_val,
@@ -90,6 +93,7 @@ class PageController extends Controller
                 'couleur'                => $c->couleur,
                 'equipement_obligatoire' => $c->equipement_obligatoire ?? [],
                 'equipement_conseille'   => $c->equipement_conseille ?? [],
+                'materiel_interdit'      => $c->materiel_interdit ?? [],
                 'ravitaillement'         => $c->ravitaillement ?? [],
                 'profil'                 => $c->profil ?? [],
                 'tarif'                  => $c->tarif,
@@ -97,15 +101,52 @@ class PageController extends Controller
                 'ordre'                  => $c->ordre,
             ]);
 
-        $seo = $this->buildSeo($request->path(), $settings, $courses);
+        $programme = collect($settings->programme ?? [])
+            ->map(fn($r) => [
+                'heure'   => $r['heure']   ?? '',
+                'libelle' => $r['libelle'] ?? '',
+            ])
+            ->filter(fn($r) => $r['heure'] !== '' || $r['libelle'] !== '')
+            ->values();
+
+        $sections = [
+            'programme'   => (bool) $settings->programme_actif,
+            'partenaires' => (bool) $settings->partenaires_actif,
+            'artisans'    => (bool) $settings->artisans_actif,
+        ];
+
+        $inscriptions = [
+            // ouvert seulement si le toggle est actif ET le lien renseigné :
+            // pas de bouton qui ne mène nulle part
+            'actif'      => (bool) $settings->inscriptions_actif && filled($settings->inscriptions_url),
+            'url'        => $settings->inscriptions_url,
+            'date_label' => $settings->inscriptions_date_ouverture?->locale('fr')->translatedFormat('j F Y'),
+        ];
+
+        $announce = [
+            'actif'      => (bool) $settings->announce_actif,
+            'message'    => $settings->announce_message,
+            'lien_label' => $settings->announce_lien_label,
+            'lien_url'   => $settings->announce_lien_url,
+            'ton'        => $settings->announce_ton ?? 'tc',
+            'debut'      => $settings->announce_debut?->toIso8601String(),
+            'fin'        => $settings->announce_fin?->toIso8601String(),
+            // change à chaque édition → réinitialise la fermeture côté visiteur
+            'key'        => (string) ($settings->updated_at?->timestamp ?? 0),
+        ];
+
+        $path = $request->path() === '/' ? '' : $request->path();
+        $seo = $this->buildSeo($path, $settings, $courses);
+        if ($seo === null) abort(404);
 
         return view('app', compact(
             'settings', 'siteOpen', 'artisanCount', 'partenaires', 'artisans',
-            'galerie', 'siteInfo', 'courses', 'actualites', 'seo'
+            'galerie', 'siteInfo', 'courses', 'actualites', 'seo', 'announce',
+            'programme', 'sections', 'inscriptions'
         ));
     }
 
-    private function buildSeo(string $path, $settings, $courses): array
+    private function buildSeo(string $path, $settings, $courses): ?array
     {
         $annee      = $settings->date_evenement?->format('Y') ?? '2027';
         $dateLongue = $settings->date_evenement
@@ -116,8 +157,8 @@ class PageController extends Controller
         $canonical  = $base.($path && $path !== '/' ? '/'.$path : '/');
 
         $default = [
-            'title'       => "Aux õrigines – Trail & Nature – Sernhac $annee",
-            'description' => "Aux õrigines, événement trail et culturel à Sernhac (Gard) le $dateLongue. 4 épreuves nature, marché artisanal, ambiance romaine au cœur du Vallon.",
+            'title'       => "Aux õrigines – Trail & Nature au Vallon de Sernhac $annee",
+            'description' => "Aux õrigines, événement trail et culturel à Sernhac (Gard) en $annee. 4 épreuves nature, marché artisanal, un retour aux sources au cœur du Vallon.",
             'canonical'   => $base.'/',
         ];
 
@@ -125,7 +166,7 @@ class PageController extends Controller
             '' => $default,
             'evenement' => [
                 'title'       => "L'Événement – Programme & Ambiance – Aux õrigines $annee",
-                'description' => "Découvrez le programme complet d'Aux õrigines le $dateLongue à $lieu : trail, marché artisanal, remises de récompenses et ambiance romaine.",
+                'description' => "Découvrez le programme complet d'Aux õrigines en $annee à $lieu : trail, marché artisanal, remises de récompenses et un retour aux sources.",
                 'canonical'   => "$base/evenement",
             ],
             'courses' => [
@@ -137,11 +178,58 @@ class PageController extends Controller
                 'title'       => "Le Vallon de Sernhac – Aux õrigines $annee",
                 'description' => "Partez à la découverte du Vallon de Sernhac : aqueduc romain, garrigues calcaires, falaises et sentiers de caractère au cœur du Gard.",
                 'canonical'   => "$base/vallon",
+                'jsonld_extra' => [
+                    '@context'    => 'https://schema.org',
+                    '@type'       => 'TouristAttraction',
+                    'name'        => 'Le Vallon de Sernhac',
+                    'alternateName' => "Vallon d'Escaunes à Cantarelles",
+                    'description' => "Site naturel remarquable de Sernhac (Gard), réputé pour ses galeries romaines prolongement du Pont du Gard, ses terrasses d'oliviers centenaires et ses sentiers balisés.",
+                    'url'         => "$base/vallon",
+                    'isAccessibleForFree' => true,
+                    'publicAccess'        => true,
+                    'geo' => [
+                        '@type'     => 'GeoCoordinates',
+                        'latitude'  => 43.9175,
+                        'longitude' => 4.5527,
+                    ],
+                    'address' => [
+                        '@type'           => 'PostalAddress',
+                        'streetAddress'   => "Chemin du Vallon d'Escaunes",
+                        'addressLocality' => 'Sernhac',
+                        'postalCode'      => '30210',
+                        'addressRegion'   => 'Gard',
+                        'addressCountry'  => 'FR',
+                    ],
+                    'amenityFeature' => [
+                        ['@type' => 'LocationFeatureSpecification', 'name' => 'Galeries romaines visitables', 'value' => true],
+                        ['@type' => 'LocationFeatureSpecification', 'name' => 'Sentiers balisés',             'value' => true],
+                        ['@type' => 'LocationFeatureSpecification', 'name' => 'Parking gratuit',              'value' => true],
+                        ['@type' => 'LocationFeatureSpecification', 'name' => 'Accès libre',                  'value' => true],
+                    ],
+                    'touristType' => ['Randonnée', 'Histoire romaine', 'Nature & Biodiversité'],
+                    'hasMap'      => 'https://www.openstreetmap.org/?mlat=43.9175&mlon=4.5527#map=16/43.9175/4.5527',
+                    'containedInPlace' => [
+                        '@type' => 'Place',
+                        'name'  => 'Sernhac',
+                        'address' => [
+                            '@type'           => 'PostalAddress',
+                            'addressLocality' => 'Sernhac',
+                            'postalCode'      => '30210',
+                            'addressRegion'   => 'Gard',
+                            'addressCountry'  => 'FR',
+                        ],
+                    ],
+                ],
             ],
             'artisans' => [
                 'title'       => "Marché d'Artisans – Aux õrigines $annee",
                 'description' => "Créateurs, producteurs locaux et artisans du Gard réunis au village départ d'Aux õrigines à Sernhac. Terroir, savoir-faire et authenticité.",
                 'canonical'   => "$base/artisans",
+            ],
+            'benevoles' => [
+                'title'       => "Devenir Bénévole – Aux õrigines $annee",
+                'description' => "Rejoignez l'équipe de bénévoles d'Aux õrigines à Sernhac : signalisation, ravitaillements, accueil du village départ. Inscrivez-vous et indiquez vos disponibilités.",
+                'canonical'   => "$base/benevoles",
             ],
             'galerie' => [
                 'title'       => "Galerie Photos & Vidéos – Aux õrigines $annee",
@@ -185,7 +273,7 @@ class PageController extends Controller
             }
         }
 
-        return $default;
+        return null;
     }
 
     private function toUrlSlug(string $str): string
