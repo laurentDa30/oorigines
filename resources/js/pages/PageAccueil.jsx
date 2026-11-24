@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import {
-  GALERIE, ACTUALITES, ARTISAN_COUNT, RACES,
+  GALERIE, ACTUALITES, ARTISAN_COUNT, RACES, RACES_KM,
   EVENT_DATE, EVENT_DATE_COURT, EVENT_DATE_CAP,
   INSCRIPTIONS, INSCRIPTIONS_OUVERTES, INSCRIPTIONS_TEXTE,
   Partners, CountdownRow, YoutubeEmbed,
@@ -269,7 +269,7 @@ export default function PageAccueil({ navigate }) {
             <div className="hero-date-sep"/>
             <div className="hero-date-item"><span className="hero-date-val">Sernhac</span><span className="hero-date-lbl">Le Vallon · Gard</span></div>
             <div className="hero-date-sep"/>
-            <div className="hero-date-item"><span className="hero-date-val">Trail / Marche</span><span className="hero-date-lbl">20km - 10km</span></div>
+            <div className="hero-date-item"><span className="hero-date-val">Trail / Marche</span><span className="hero-date-lbl">{RACES_KM.join(' - ')}</span></div>
           </div>
           <div className="hero-actions">
             <button className="btn-primary" onClick={()=>navigate('courses')}>Découvrir les courses</button>

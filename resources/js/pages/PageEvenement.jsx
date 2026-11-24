@@ -1,5 +1,5 @@
 import React from 'react';
-import { EVENT_DATE_CAP, Partners, PROGRAMME, SECTIONS } from '../shared';
+import { EVENT_DATE_CAP, Partners, PROGRAMME, SECTIONS, RACES_KM } from '../shared';
 
 export default function PageEvenement({ navigate }) {
   const programmeOn = !!SECTIONS.programme;
@@ -19,7 +19,7 @@ export default function PageEvenement({ navigate }) {
             <h2 className="sec-title">Un trail <em>technique</em></h2>
             <div className="sec-rule"/>
             <p className="body">Le Vallon de Sernhac n'est pas un terrain ordinaire. Falaises, sous-bois, sentiers escarpés et passages en crête, les parcours mettent à l'épreuve l'équilibre, la lecture du terrain et l'endurance. Chaque foulée se mérite.</p>
-            <p className="body">Coureurs confirmés, débutants, marcheurs, enfants : Aux Origines trace un chemin pour chacun. 20km, 10km, marche, trail enfants - même vallon, même histoire, même journée.</p>
+            <p className="body">Coureurs confirmés, débutants, marcheurs, enfants : Aux Origines trace un chemin pour chacun. {[...RACES_KM, 'marche', 'trail enfants'].join(', ')} - même vallon, même histoire, même journée.</p>
             <button className="btn-primary" onClick={()=>navigate('courses')} style={{marginTop:8}}>Voir les courses</button>
           </div>
           <div>

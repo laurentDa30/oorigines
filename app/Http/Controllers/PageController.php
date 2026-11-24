@@ -155,10 +155,19 @@ class PageController extends Controller
         $lieu       = 'Sernhac, Gard';
         $base       = rtrim(config('app.url'), '/');
         $canonical  = $base.($path && $path !== '/' ? '/'.$path : '/');
+        // Nombre et liste des épreuves tirés de la base : pas de chiffre écrit en dur qui se périme.
+        $nbEpreuves = $courses->count();
+        $epreuves   = $nbEpreuves > 1 ? "$nbEpreuves épreuves" : ($nbEpreuves === 1 ? '1 épreuve' : 'Des épreuves');
+        $listeCourses = $courses
+            ->map(fn($c) => trim(trim($c['nom']).' '.($c['distance_affichee'] ?? '')))
+            ->values();
+        $listeTexte = $listeCourses->count() > 1
+            ? $listeCourses->slice(0, -1)->implode(', ').' et '.$listeCourses->last()
+            : $listeCourses->implode('');
 
         $default = [
             'title'       => "Aux õrigines – Trail & Nature au Vallon de Sernhac $annee",
-            'description' => "Aux õrigines, événement trail et culturel à Sernhac (Gard) en $annee. 4 épreuves nature, marché artisanal, un retour aux sources au cœur du Vallon.",
+            'description' => "Aux õrigines, événement trail et culturel à Sernhac (Gard) en $annee. $epreuves nature, marché artisanal, un retour aux sources au cœur du Vallon.",
             'canonical'   => $base.'/',
         ];
 
@@ -171,7 +180,9 @@ class PageController extends Controller
             ],
             'courses' => [
                 'title'       => "Les Courses de Trail – Aux õrigines $annee",
-                'description' => "4 épreuves de trail à Sernhac : Astra'trail 20 km, Sarnacum'trail 12 km, Marche Nordique et course enfants. Parcours, horaires et inscriptions.",
+                'description' => $listeTexte
+                    ? "$epreuves à Sernhac (Gard) : $listeTexte. Parcours, horaires et inscriptions."
+                    : "Les épreuves de trail et de marche d'Aux õrigines à Sernhac (Gard). Parcours, horaires et inscriptions.",
                 'canonical'   => "$base/courses",
             ],
             'vallon' => [
@@ -263,6 +274,7 @@ class PageController extends Controller
             $course  = $courses->first(fn($c) => $this->toUrlSlug($c['nom']) === $urlSlug);
             if ($course) {
                 $dist = $course['distance_affichee'] ?? ($course['distance_val'].' '.($course['distance_unit'] ?? 'km'));
+                $course['nom'] = trim($course['nom']);
                 return [
                     'title'       => "{$course['nom']} – {$dist} – Aux õrigines $annee",
                     'description' => $course['tagline']

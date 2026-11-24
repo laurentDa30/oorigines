@@ -32,7 +32,8 @@
     # Redirect Trailing Slashes If Not A Folder...
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_URI} (.+)/$
-    RewriteRule ^ %1 [L,R=301]
+    # URL absolue en https : derrière le proxy, une cible relative était reconstruite en http (double redirection)
+    RewriteRule ^ https://%{HTTP_HOST}%1 [L,R=301]
 
     # Send Requests To Front Controller...
     RewriteCond %{REQUEST_FILENAME} !-d

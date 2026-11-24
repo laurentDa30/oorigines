@@ -3,10 +3,9 @@ import React, { useState, useEffect, useRef, useLayoutEffect, Suspense } from 'r
 import { motion, AnimatePresence } from 'framer-motion';
 import { createRoot } from 'react-dom/client';
 import {
-  SITE_OPEN, SEO_BASE, EVENT_YEAR, RACES, PARTENAIRES, SITE_INFO, ANNOUNCE,
+  SEO_BASE, EVENT_YEAR, RACES, PARTENAIRES, SITE_INFO, ANNOUNCE,
   INSCRIPTIONS, INSCRIPTIONS_OUVERTES,
-  pageFromPath, useCountdown, pad,
-  Ornament, CountdownRow, CookieConsentCtx, Partners,
+  pageFromPath, CookieConsentCtx, Partners,
 } from './shared';
 
 /* ── Pages (lazy) ── */
@@ -26,36 +25,6 @@ const LazyPagePartenaires  = React.lazy(() => import('./pages/PagePartenaires'))
 const LazyPageGalerie      = React.lazy(() => import('./pages/PageGalerie'));
 const LazyPageActualites   = React.lazy(() => import('./pages/PageActualites'));
 const LazyPageContact      = React.lazy(() => import('./pages/PageContact'));
-
-/* ── Intro ── */
-function IntroScreen({ onEnter }) {
-  const t = useCountdown(SITE_OPEN);
-  return (
-    <div className="intro">
-      <div className="intro-inner">
-        <div className="intro-loc">Sernhac · Le Vallon · Gard</div>
-        <div className="intro-brand">Aux <em>õ</em>rigines</div>
-        <div className="intro-tag">Trail / Marche Nature · 20KM - 10KM · Retour aux sources</div>
-        <Ornament/>
-        <div className="intro-msg">{t.done ? 'Le site est ouvert !' : 'Ouverture du site dans'}</div>
-        <CountdownRow target={SITE_OPEN}/>
-        <div style={{display:'flex',alignItems:'center',gap:6,marginTop:28,justifyContent:'center'}}>
-          <span style={{fontFamily:'var(--ff)',fontSize:9,letterSpacing:'.22em',textTransform:'uppercase',color:'#d6c0a9'}}>made by</span>
-          <a href="https://www.facebook.com/assoc.sms" target="_blank" rel="noopener noreferrer">
-            <img src="/images/logo/logo_sms_vectorized.svg" alt="SMS" style={{height:14,width:'auto',opacity:.75,filter:'sepia(0.3) brightness(0.9)',display:'block'}}/>
-          </a>
-        </div>
-        <div style={{display:'flex',alignItems:'center',gap:10,marginTop:14,justifyContent:'center'}}>
-          <span style={{fontFamily:'var(--ff)',fontSize:9,letterSpacing:'.18em',textTransform:'uppercase',color:'#d6c0a9',opacity:.85}}>Ajoutez ce site à vos favoris&nbsp;(Ctrl&#8202;+&#8202;D)</span>
-          <a href="https://www.facebook.com/auxoriginestrail/" target="_blank" rel="noopener noreferrer" aria-label="Facebook Aux õrigines" style={{display:'inline-flex',color:'#d6c0a9',opacity:.85,transition:'opacity .2s'}} onMouseEnter={e=>e.currentTarget.style.opacity=1} onMouseLeave={e=>e.currentTarget.style.opacity=.85}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
-          </a>
-        </div>
-        {t.done && <button className="btn-enter" onClick={onEnter}>Découvrir l'événement →</button>}
-      </div>
-    </div>
-  );
-}
 
 /* ── Announce bar ──
    Bandeau d'info paramétrable depuis l'admin (Configuration › Bandeau d'annonce).
@@ -336,12 +305,6 @@ function Footer({ navigate }) {
 
 /* ── App ── */
 function App() {
-  const [showIntro,setShowIntro]=useState(()=>{
-    if(/bot|googlebot|crawler|spider|robot|bingbot|yandex|baidu|duckduck/i.test(navigator.userAgent)) return false;
-    if(new URLSearchParams(window.location.search).get('preview')==='1') return false;
-    if(localStorage.getItem('oo_site_entered')) return false;
-    return Date.now()<SITE_OPEN.getTime();
-  });
   const [page,setPage]=useState(pageFromPath);
   const [menuOpen,setMenuOpen]=useState(false);
   const navigate=(p, extra)=>{
@@ -382,8 +345,6 @@ function App() {
   const [consent, setConsent] = useState(() => localStorage.getItem('oo_cookie_consent'));
   const accept = () => { localStorage.setItem('oo_cookie_consent','all');       setConsent('all'); };
   const refuse = () => { localStorage.setItem('oo_cookie_consent','essential'); setConsent('essential'); };
-  const enterSite=()=>{ localStorage.setItem('oo_site_entered','1'); setShowIntro(false); };
-  if(showIntro) return <IntroScreen onEnter={enterSite}/>;
 
   const courseRace = page.startsWith('course/')
     ? RACES.find(r => r.urlSlug === page.slice(7)) ?? null

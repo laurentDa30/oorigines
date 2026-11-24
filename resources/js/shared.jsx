@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
 /* ── Globals ── */
-export const SITE_OPEN     = new Date(window.__SITE_OPEN   || '2026-09-01T00:00:00');
 export const EVENT_DATE    = new Date(window.__EVENT_DATE  || '2027-04-24T08:00:00');
 export const CSRF          = window.__CSRF_TOKEN   || '';
 export const ARTISAN_COUNT = window.__ARTISAN_COUNT || 0;
@@ -24,13 +23,15 @@ export const INSCRIPTIONS_TEXTE = INSCRIPTIONS.date_label
   : 'Les inscriptions ouvriront prochainement.';
 
 /* ── Helpers date ── */
-export function fmtDate(date, opts) { return date.toLocaleDateString('fr-FR', opts); }
-export const EVENT_YEAR       = EVENT_DATE.getFullYear();
+// Toujours formater dans le fuseau de l'événement : sinon un navigateur hors de France (Googlebot rend
+// les pages en heure de Californie) affiche la veille (« 9 avril » pour un départ le 10 à 8h00 à Paris).
+export function fmtDate(date, opts) { return date.toLocaleDateString('fr-FR', { ...opts, timeZone: 'Europe/Paris' }); }
+export const EVENT_YEAR       = Number(fmtDate(EVENT_DATE, {year:'numeric'}));
 export const EVENT_DATE_COURT = fmtDate(EVENT_DATE, {day:'numeric', month:'long', year:'numeric'});
 export const EVENT_DATE_CAP   = EVENT_DATE_COURT.replace(/(\d+\s)(\w)/, (_, d, l) => d + l.toUpperCase());
 export const EVENT_DATE_LONG  = fmtDate(EVENT_DATE, {weekday:'long', day:'numeric', month:'long', year:'numeric'}).replace(/^\w/, l => l.toUpperCase());
 export function eventEve() {
-  const d = new Date(EVENT_DATE); d.setDate(d.getDate() - 1);
+  const d = new Date(EVENT_DATE.getTime() - 86400000);
   return fmtDate(d, {weekday:'long', day:'numeric', month:'long', year:'numeric'}).replace(/^\w/, l => l.toUpperCase());
 }
 
@@ -86,6 +87,11 @@ export const RACES = COURSES.map(c => ({
   tarif:       c.tarif,
   limite:      c.limite,
 }));
+
+/* Distances en km distinctes, de la plus longue à la plus courte (formats en mètres exclus) : ['22km', '10km'] */
+export const RACES_KM = [...new Set(RACES.filter(r => r.unit === 'km' && r.dist).map(r => Number(r.dist)))]
+  .sort((a, b) => b - a)
+  .map(d => `${d}km`);
 
 /* ── Composants partagés ── */
 export function Ornament() {

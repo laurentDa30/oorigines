@@ -133,11 +133,13 @@ nav.scrolled { background:var(--dark2); box-shadow:0 2px 24px oklch(5% .02 38 / 
 }
 
 /* ── HERO ─── */
-.hero { height:100vh; min-height:620px; position:relative; display:flex; align-items:center; justify-content:center; text-align:center; overflow:hidden; }
+/* max-height : Googlebot rend la page dans une fenêtre aussi haute que tout le document → sans plafond, le hero
+   faisait des milliers de px et le titre sortait de la capture. Identique pour tout écran ≤ 1400px de haut. */
+.hero { height:100vh; max-height:1400px; min-height:620px; position:relative; display:flex; align-items:center; justify-content:center; text-align:center; overflow:hidden; }
 .hero-bg { position:absolute; inset:0; background-size:cover; background-position:center 30%; filter:brightness(.32) saturate(1.2); }
 .hero::after { content:''; position:absolute; inset:0; z-index:1; pointer-events:none; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E"); opacity:.055; mix-blend-mode:overlay; }
 .hero-overlay { position:absolute; inset:0; z-index:1; background: radial-gradient(ellipse 70% 60% at 20% 60%, oklch(54% 0.14 38 / 0.18) 0%, transparent 65%), radial-gradient(ellipse 60% 55% at 80% 40%, oklch(66% 0.13 75 / 0.13) 0%, transparent 65%), radial-gradient(ellipse 80% 60% at 50% 50%, transparent 20%, oklch(8% .03 38 / .55) 100%), linear-gradient(to top, oklch(8% .03 38 / .95) 0%, transparent 45%), linear-gradient(to bottom, oklch(8% .03 38 / .6) 0%, transparent 30%); }
-.hero-inner { position:relative; z-index:2; padding:0 24px; max-width:1000px; transform:translateY(-6vh); }
+.hero-inner { position:relative; z-index:2; padding:0 24px; max-width:1000px; transform:translateY(max(-6vh, -84px)); } /* -84px = 6% de 1400 */
 .hero-rule { display:flex; align-items:center; justify-content:center; margin-bottom:28px; }
 .hero-rule-line { height:1px; width:120px; background:linear-gradient(90deg,transparent,var(--tc) 60%,var(--ocre)); }
 .hero-rule-line.r { background:linear-gradient(90deg,var(--ocre),var(--tc) 40%,transparent); }

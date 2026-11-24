@@ -77,7 +77,10 @@
       ],
       'geo' => ['@type' => 'GeoCoordinates', 'latitude' => 43.891, 'longitude' => 4.537],
     ];
-    $organizer      = ['@type' => 'Organization', 'name' => 'Aux õrigines', 'url' => $siteUrl, 'email' => $settings->email_contact ?? ''];
+    $organizer      = ['@type' => 'Organization', 'name' => 'Sernhac Multi Sports', 'url' => 'https://www.facebook.com/assoc.sms', 'email' => $settings->email_contact ?? ''];
+    // Inscriptions ouvertes (toggle admin + lien) → billetterie « en stock » et lien direct vers l'inscription.
+    $inscOuvertes   = $inscriptions['actif'];
+    $availability   = $inscOuvertes ? 'https://schema.org/InStock' : 'https://schema.org/PreOrder';
     // Prix du JSON-LD : premier nombre du tarif affiché (« À partir de 22 € » → 22), « Gratuit » → 0.
     $prixDe = function (?string $tarif) {
       if ($tarif && preg_match('/\d+(?:[.,]\d+)?/', $tarif, $m)) return str_replace(',', '.', $m[0]);
@@ -85,13 +88,14 @@
     };
     // Heure de départ saisie « 15h00 », « 14h », « 15h45 » → « 15:00 ».
     $heureDe = fn (?string $h) => ($h && preg_match('/(\d{1,2})\s*h\s*(\d{2})?/i', $h, $m)) ? sprintf('%02d:%02d', $m[1], $m[2] ?? 0) : null;
-    $offerValidFrom = $settings->date_ouverture_site?->format('c') ?? now()->format('c');
-    $coursesList = $courses->map(function ($c) use ($siteUrl, $eventAt, $eventIso, $eventEnd, $eventImg, $location, $organizer, $offerValidFrom, $prixDe, $heureDe) {
+    // Dates saisies en heure locale (stockées sans fuseau) → réinterprétées en Europe/Paris.
+    $offerValidFrom = ($settings->inscriptions_date_ouverture ?? $settings->date_ouverture_site)?->shiftTimezone('Europe/Paris')->format('c') ?? now()->format('c');
+    $coursesList = $courses->map(function ($c) use ($siteUrl, $eventAt, $eventIso, $eventEnd, $eventImg, $location, $organizer, $offerValidFrom, $prixDe, $heureDe, $availability, $inscOuvertes, $inscriptions) {
       // Même slug que SitemapController::toUrlSlug (trim des tirets inclus).
       $url   = $siteUrl.'/course/'.trim(preg_replace('/[^a-z0-9]+/', '-', mb_strtolower(strtr($c['nom'], ['à'=>'a','â'=>'a','ä'=>'a','é'=>'e','è'=>'e','ê'=>'e','ë'=>'e','î'=>'i','ï'=>'i','ô'=>'o','ö'=>'o','ù'=>'u','û'=>'u','ü'=>'u','ç'=>'c','õ'=>'o']))), '-');
       $heure = $heureDe($c['heure_depart'] ?? null);
       $prix  = $prixDe($c['tarif'] ?? null);
-      $offer = ['@type' => 'Offer', 'url' => $url, 'availability' => 'https://schema.org/PreOrder', 'priceCurrency' => 'EUR', 'validFrom' => $offerValidFrom];
+      $offer = ['@type' => 'Offer', 'url' => $inscOuvertes ? $inscriptions['url'] : $url, 'availability' => $availability, 'priceCurrency' => 'EUR', 'validFrom' => $offerValidFrom];
       if ($prix !== null) $offer['price'] = $prix;
       return [
         '@type'       => 'Event',
@@ -124,7 +128,7 @@
       'location'    => $location,
       'organizer'   => $organizer,
       'performer'   => ['@type' => 'PerformingGroup', 'name' => 'Coureurs et marcheurs Aux õrigines'],
-      'offers'      => ['@type' => 'AggregateOffer', 'url' => $siteUrl.'/courses', 'availability' => 'https://schema.org/PreOrder', 'priceCurrency' => 'EUR', 'lowPrice' => '0', 'validFrom' => $offerValidFrom],
+      'offers'      => ['@type' => 'AggregateOffer', 'url' => $inscOuvertes ? $inscriptions['url'] : $siteUrl.'/courses', 'availability' => $availability, 'priceCurrency' => 'EUR', 'lowPrice' => '0', 'validFrom' => $offerValidFrom],
       'subEvent' => $coursesList,
     ];
   @endphp
@@ -146,18 +150,23 @@
       <p>Niché dans le Gard, le Vallon de Sernhac est un écrin de nature sauvage avec ses garrigues, falaises calcaires et sentiers romains. Un cadre d'exception pour un événement trail hors du commun.</p>
 
       <h2>Les Courses</h2>
-      <p>Quatre épreuves pour tous les niveaux, du trail technique au parcours enfants :</p>
+      @php $nbCourses = $courses->count(); @endphp
+      <p>{{ $nbCourses > 1 ? $nbCourses.' épreuves' : ($nbCourses === 1 ? 'Une épreuve' : 'Des épreuves') }} pour tous les niveaux, du trail technique au parcours enfants :</p>
       <ul>
         @foreach($courses as $course)
           <li>
-            <strong>{{ $course['nom'] }}</strong> – {{ $course['distance_affichee'] }}
+            <strong>{{ trim($course['nom']) }}</strong> – {{ $course['distance_affichee'] }}
             @if($course['tagline']) – {{ $course['tagline'] }} @endif
             @if($course['denivele']) ({{ $course['denivele'] }}) @endif
           </li>
         @endforeach
       </ul>
       <h3>Inscriptions et tarifs</h3>
-      <p>Les inscriptions ouvriront prochainement. Consultez la page des courses pour les tarifs et conditions de participation.</p>
+      @if($inscriptions['actif'])
+        <p>Les inscriptions sont ouvertes : <a href="{{ $inscriptions['url'] }}">s'inscrire en ligne</a>. Consultez la page des courses pour les tarifs et conditions de participation.</p>
+      @else
+        <p>Les inscriptions ouvriront {{ $inscriptions['date_label'] ? 'le '.$inscriptions['date_label'] : 'prochainement' }}. Consultez la page des courses pour les tarifs et conditions de participation.</p>
+      @endif
 
       <h2>Marché d'Artisans</h2>
       <p>Un marché artisanal authentique réunit créateurs, producteurs locaux et artisans du Gard au village départ. Terroir, savoir-faire et convivialité au rendez-vous.</p>
@@ -177,8 +186,8 @@
   @endphp
   <script @if(!empty($cspNonce))nonce="{{ $cspNonce }}"@endif>
     window.__ADMIN_PATH     = {!! json_encode(config('app.admin_path'), $jsScriptFlags) !!};
-    window.__SITE_OPEN      = {!! json_encode($settings->date_ouverture_site?->toIso8601String() ?? '2026-09-01T00:00:00', $jsScriptFlags) !!};
-    window.__EVENT_DATE     = {!! json_encode($settings->date_evenement?->toIso8601String() ?? '2027-04-24T08:00:00', $jsScriptFlags) !!};
+    {{-- Heure saisie en admin = heure de Paris (stockée sans fuseau) : sans shiftTimezone elle partait en +00:00 (2 h de décalage). --}}
+    window.__EVENT_DATE     = {!! json_encode($settings->date_evenement?->shiftTimezone('Europe/Paris')->toIso8601String() ?? '2027-04-24T08:00:00+02:00', $jsScriptFlags) !!};
     window.__CSRF_TOKEN     = {!! json_encode(csrf_token(), $jsScriptFlags) !!};
     window.__ARTISAN_COUNT  = {{ (int) $artisanCount }};
     window.__PARTENAIRES    = {!! json_encode($partenaires, $jsScriptFlags) !!};
