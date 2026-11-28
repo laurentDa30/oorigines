@@ -26,7 +26,7 @@ export default function PageGalerie({ navigate }) {
     <>
       <div className="wrap" style={{paddingTop:164}}>
         <div className="sec-tag">Souvenirs</div>
-        <h2 className="sec-title">La <em>Galerie</em></h2>
+        <h1 className="sec-title">La <em>Galerie</em></h1>
         <div className="sec-rule"/>
         <div className="gal-grid">
           {photos.length > 0
@@ -75,10 +75,10 @@ export default function PageGalerie({ navigate }) {
             else        setLightbox(i => (i - 1 + photos.length) % photos.length);
           }}
         >
-          <button className="lightbox-close" onClick={() => setLightbox(null)}>×</button>
+          <button className="lightbox-close" aria-label="Fermer" onClick={() => setLightbox(null)}>×</button>
           {photos.length > 1 && <>
-            <button className="lightbox-nav lightbox-nav--prev" onClick={e => { e.stopPropagation(); setLightbox(i => (i - 1 + photos.length) % photos.length); }}>‹</button>
-            <button className="lightbox-nav lightbox-nav--next" onClick={e => { e.stopPropagation(); setLightbox(i => (i + 1) % photos.length); }}>›</button>
+            <button className="lightbox-nav lightbox-nav--prev" aria-label="Photo précédente" onClick={e => { e.stopPropagation(); setLightbox(i => (i - 1 + photos.length) % photos.length); }}>‹</button>
+            <button className="lightbox-nav lightbox-nav--next" aria-label="Photo suivante" onClick={e => { e.stopPropagation(); setLightbox(i => (i + 1) % photos.length); }}>›</button>
           </>}
           <img
             className="lightbox-img"

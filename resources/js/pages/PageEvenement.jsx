@@ -1,5 +1,5 @@
 import React from 'react';
-import { EVENT_DATE_CAP, Partners, PROGRAMME, SECTIONS, RACES_KM } from '../shared';
+import { EVENT_DATE_CAP, Partners, PROGRAMME, SECTIONS, RACES_KM, spaLink } from '../shared';
 
 export default function PageEvenement({ navigate }) {
   const programmeOn = !!SECTIONS.programme;
@@ -8,8 +8,10 @@ export default function PageEvenement({ navigate }) {
       <div style={{height:320,position:'relative',overflow:'hidden'}}>
         <div className="hero-bg" style={{backgroundImage:"url('/images/vallon.jpg')",position:'absolute',inset:0,filter:'brightness(.42)'}}/>
         <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',paddingTop:'calc(112px + var(--ann-h,0px))'}}>
-          <div className="hero-eyebrow">L'Événement</div>
-          <h1 className="hero-title" style={{fontSize:'clamp(40px,7vw,90px)'}}>Aux <em>õ</em>rigines</h1>
+          <h1 style={{margin:0,textAlign:'center',fontWeight:'inherit'}}>
+            <span className="hero-eyebrow" style={{display:'block'}}>L'Événement </span>
+            <span className="hero-title" style={{display:'block',fontSize:'clamp(40px,7vw,90px)'}}>Aux <em>õ</em>rigines</span>
+          </h1>
         </div>
       </div>
       <div className="wrap">
@@ -20,7 +22,7 @@ export default function PageEvenement({ navigate }) {
             <div className="sec-rule"/>
             <p className="body">Le Vallon de Sernhac n'est pas un terrain ordinaire. Falaises, sous-bois, sentiers escarpés et passages en crête, les parcours mettent à l'épreuve l'équilibre, la lecture du terrain et l'endurance. Chaque foulée se mérite.</p>
             <p className="body">Coureurs confirmés, débutants, marcheurs, enfants : Aux Origines trace un chemin pour chacun. {[...RACES_KM, 'marche', 'trail enfants'].join(', ')} - même vallon, même histoire, même journée.</p>
-            <button className="btn-primary" onClick={()=>navigate('courses')} style={{marginTop:8}}>Voir les courses</button>
+            <a className="btn-primary" {...spaLink('courses', navigate)} style={{marginTop:8}}>Voir les courses</a>
           </div>
           <div>
             <div className="sec-tag">L'Esprit</div>
@@ -54,7 +56,7 @@ export default function PageEvenement({ navigate }) {
         <div style={{position:'absolute',inset:0,background:'oklch(8% .03 38 / .60)'}}/>
         <div style={{position:'relative',maxWidth:1160,margin:'0 auto',display:'flex',justifyContent:'flex-end',width:'100%'}}>
           <div style={{background:'oklch(10% .04 38 / .92)',padding:'clamp(28px,4vw,52px)',maxWidth:560,borderLeft:'4px solid var(--tc)',width:'100%'}}>
-            <div className="sec-tag">L'Atmosphère</div>
+            <div className="sec-tag" style={{color:'var(--ocre)'}}>L'Atmosphère</div>
             <h2 className="sec-title" style={{color:'var(--cream)'}}>Courir là où <em>tout a commencé</em></h2>
             <div className="sec-rule"/>
             <p style={{fontSize:'clamp(16px,1.4vw,19px)',lineHeight:1.85,color:'oklch(95% 0.012 68)',marginBottom:18}}>Les sentiers du Vallon ne sont pas tracés au hasard. Ils suivent des chemins que les Romains ont ouverts il y a deux mille ans. Courir ici, c'est sentir le poids de l'histoire sous chaque appui, entre les falaises et les oliviers centenaires.</p>

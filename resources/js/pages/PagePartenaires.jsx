@@ -1,5 +1,5 @@
 import React from 'react';
-import { PARTENAIRES, Partners, SECTIONS } from '../shared';
+import { PARTENAIRES, Partners, SECTIONS, spaLink } from '../shared';
 
 function PartnerCard({ p }) {
   const inner = (
@@ -39,7 +39,7 @@ export default function PagePartenaires({ navigate }) {
     <>
       <div className="wrap" style={{paddingTop:164}}>
         <div className="sec-tag">Soutenir l'événement</div>
-        <h2 className="sec-title">Devenir <em>Partenaire</em></h2>
+        <h1 className="sec-title">Devenir <em>Partenaire</em></h1>
         <div className="sec-rule"/>
         <div className="split" style={{marginBottom:52}}>
           <div>
@@ -47,9 +47,9 @@ export default function PagePartenaires({ navigate }) {
             <p className="body">Votre logo apparaîtra sur les supports de communication suivant : site web et affiches</p>
           </div>
           <div style={{background:'var(--paper)',padding:'clamp(20px,3vw,36px)',borderLeft:'4px solid var(--tc)'}}>
-            <div style={{fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:'.4em',textTransform:'uppercase',color:'var(--tc)',marginBottom:18}}>Niveaux de partenariat</div>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:'.4em',textTransform:'uppercase',color:'var(--tc2)',marginBottom:18}}>Niveaux de partenariat</div>
             <p className="body" style={{marginBottom:20}}>Associez votre image à une journée sportive et culturelle d'exception. Voici ce que votre partenariat apporte concrètement.</p>
-            <div style={{fontFamily:"'Cinzel',serif",fontSize:9,letterSpacing:'.25em',textTransform:'uppercase',color:'var(--tc)',marginBottom:10}}>Ce que vous gagnez</div>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:9,letterSpacing:'.25em',textTransform:'uppercase',color:'var(--tc2)',marginBottom:10}}>Ce que vous gagnez</div>
             <ul style={{listStyle:'none',padding:0,margin:'0 0 24px',display:'flex',flexDirection:'column',gap:8}}>
               {[
                 ['📣','Communication sur nos réseaux sociaux avant et pendant l\'événement'],
@@ -58,11 +58,11 @@ export default function PagePartenaires({ navigate }) {
               ].map(([icon,txt])=>(
                 <li key={txt} style={{display:'flex',gap:10,alignItems:'flex-start'}}>
                   <span style={{fontSize:16,lineHeight:1.4,flexShrink:0}}>{icon}</span>
-                  <span style={{fontSize:14,color:'oklch(55% .04 68)',lineHeight:1.55}}>{txt}</span>
+                  <span style={{fontSize:14,color:'var(--stone-texte)',lineHeight:1.55}}>{txt}</span>
                 </li>
               ))}
             </ul>
-            <button className="btn-primary" onClick={()=>navigate('contact')}>Nous contacter pour un partenariat</button>
+            <a className="btn-primary" {...spaLink('contact', navigate)}>Nous contacter pour un partenariat</a>
           </div>
         </div>
 

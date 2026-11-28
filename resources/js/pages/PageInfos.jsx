@@ -1,5 +1,5 @@
 import React from 'react';
-import { EVENT_YEAR, EVENT_DATE_LONG, eventEve, Partners } from '../shared';
+import { EVENT_YEAR, EVENT_DATE_LONG, eventEve, Partners, spaLink } from '../shared';
 
 export default function PageInfos({ navigate }) {
   const sections = [
@@ -84,7 +84,7 @@ export default function PageInfos({ navigate }) {
                 <div style={{fontFamily:"'Cinzel',serif",fontSize:13,fontWeight:700,color:'white'}}>{EVENT_DATE_LONG} · Vallon de Sernhac · Gard</div>
               </div>
             </div>
-            <button className="btn-primary" onClick={()=>navigate('contact')}>Une question ? →</button>
+            <a className="btn-primary" {...spaLink('contact', navigate)}>Une question ? →</a>
           </div>
         </div>
       </div>
@@ -119,8 +119,8 @@ export default function PageInfos({ navigate }) {
           <div style={{fontFamily:"'Cinzel',serif",fontSize:'clamp(15px,2vw,20px)',color:'white',fontWeight:700}}>L'organisation est disponible pour vous aider.</div>
         </div>
         <div style={{display:'flex',gap:14,flexWrap:'wrap'}}>
-          <button className="btn-primary" onClick={()=>navigate('contact')}>Nous contacter</button>
-          <button className="btn-ghost" onClick={()=>navigate('evenement')}>← Programme de la journée</button>
+          <a className="btn-primary" {...spaLink('contact', navigate)}>Nous contacter</a>
+          <a className="btn-ghost" {...spaLink('evenement', navigate)}>← Programme de la journée</a>
         </div>
       </div>
 

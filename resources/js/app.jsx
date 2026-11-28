@@ -5,7 +5,7 @@ import { createRoot } from 'react-dom/client';
 import {
   SEO_BASE, EVENT_YEAR, RACES, PARTENAIRES, SITE_INFO, ANNOUNCE,
   INSCRIPTIONS, INSCRIPTIONS_OUVERTES,
-  pageFromPath, CookieConsentCtx, Partners,
+  pageFromPath, CookieConsentCtx, Partners, pathOf, spaLink,
 } from './shared';
 
 /* ── Pages (lazy) ── */
@@ -91,7 +91,7 @@ function TopBar({ navigate }) {
       <div className="top-bar-right">
         {INSCRIPTIONS_OUVERTES
           ? <a className="top-bar-cta" href={INSCRIPTIONS.url} target="_blank" rel="noopener noreferrer">Je m'inscris →</a>
-          : <button className="top-bar-cta" onClick={()=>navigate('courses')}>Je m'inscris →</button>}
+          : <a className="top-bar-cta" {...spaLink('courses', navigate)}>Je m'inscris →</a>}
       </div>
     </div>
   );
@@ -99,16 +99,6 @@ function TopBar({ navigate }) {
 
 /* ── Liens SPA ── */
 // Vrai href (crawlable par Google, ctrl/cmd+clic = nouvel onglet) + navigation SPA au clic simple.
-const pathOf = p => p==='accueil' ? '/' : '/'+p;
-const spaLink = (p, go) => ({
-  href: pathOf(p),
-  onClick: e => {
-    e.stopPropagation();
-    if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || e.button !== 0) return;
-    e.preventDefault();
-    go(p);
-  },
-});
 
 /* ── Nav ── */
 function Nav({ navigate, page, menuOpen, setMenuOpen }) {
@@ -144,7 +134,7 @@ function Nav({ navigate, page, menuOpen, setMenuOpen }) {
           {sub.map(([sid,slbl,off])=>(
             <li key={sid}>
               {off
-                ? <a className="is-disabled" title="Bientôt disponible" aria-disabled="true" onClick={e=>e.stopPropagation()}>{slbl}</a>
+                ? <span className="is-disabled" title="Bientôt disponible" onClick={e=>e.stopPropagation()}>{slbl}</span>
                 : <a {...spaLink(sid, go)}>{slbl}</a>}
             </li>
           ))}
@@ -156,19 +146,19 @@ function Nav({ navigate, page, menuOpen, setMenuOpen }) {
     <>
       <nav className={scrolled?'scrolled':''}>
         <ul className="nav-links nav-links-left">{linksLeft.map(renderLink)}</ul>
-        <div className="nav-logo" onClick={()=>go('accueil')}>
+        <a className="nav-logo" {...spaLink('accueil', go)}>
           <img src="/images/logo/logo-preview.png" alt="Aux õrigines" style={{height:80,width:'auto',display:'block',position:'relative',zIndex:1}}/>
-        </div>
+        </a>
         <ul className="nav-links nav-links-right">{linksRight.map(renderLink)}</ul>
-        <button className="hamburger" onClick={()=>setMenuOpen(o=>!o)}><span/><span/><span/></button>
+        <button className="hamburger" aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'} aria-expanded={menuOpen} aria-controls="mobile-menu" onClick={()=>setMenuOpen(o=>!o)}><span/><span/><span/></button>
       </nav>
-      <div className={`mobile-menu ${menuOpen?'open':''}`}>
+      <div id="mobile-menu" className={`mobile-menu ${menuOpen?'open':''}`}>
         {links.map(([id,lbl,sub])=>(
           <React.Fragment key={id}>
             <a {...spaLink(id, go)}>{lbl}</a>
             {sub&&sub.slice(1).map(([sid,slbl,off])=>(
               off
-                ? <a key={sid} className="is-disabled" title="Bientôt disponible" aria-disabled="true" style={{fontSize:13,paddingLeft:24}}>↳ {slbl}</a>
+                ? <span key={sid} className="is-disabled" title="Bientôt disponible" style={{fontSize:13,paddingLeft:24}}>↳ {slbl}</span>
                 : <a key={sid} {...spaLink(sid, go)} style={{fontSize:13,opacity:.7,paddingLeft:24}}>↳ {slbl}</a>
             ))}
           </React.Fragment>
@@ -238,10 +228,10 @@ function Footer({ navigate }) {
     <footer className="site-footer">
       <div className="site-footer__inner">
         <div className="site-footer__col site-footer__col--brand">
-          <div className="site-footer__logo" onClick={() => navigate('accueil')}>
+          <a className="site-footer__logo" {...spaLink('accueil', navigate)}>
             <span className="site-footer__logo-name">Aux</span>
             <span className="site-footer__logo-name"><span className="site-footer__logo-mark">õ</span>rigines</span>
-          </div>
+          </a>
           <p className="site-footer__tagline">Trail nature · Tradition<br/>Revenir aux sources · Sernhac{' '}
             <a href={`/${window.__ADMIN_PATH||'gestion-origines'}`} aria-label="Administration" style={{display:'inline-flex',verticalAlign:'middle',opacity:0,transition:'opacity .2s',color:'inherit',cursor:'default'}} onMouseEnter={e=>e.currentTarget.style.opacity=.2} onMouseLeave={e=>e.currentTarget.style.opacity=0}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
@@ -264,7 +254,7 @@ function Footer({ navigate }) {
         </div>
 
         <div className="site-footer__col">
-          <h4 className="site-footer__heading">Plan du site</h4>
+          <h2 className="site-footer__heading">Plan du site</h2>
           <ul className="site-footer__links">
             {NAV_PLAN.map(({ label, page, disabled }) => (
               <li key={page}>
@@ -278,7 +268,7 @@ function Footer({ navigate }) {
         </div>
 
         <div className="site-footer__col">
-          <h4 className="site-footer__heading">Règlement</h4>
+          <h2 className="site-footer__heading">Règlement</h2>
           <ul className="site-footer__links">
             {info.reglementUrl
               ? <li><a href={info.reglementUrl} target="_blank" rel="noreferrer" className="site-footer__link">Règlement général</a></li>
@@ -286,7 +276,7 @@ function Footer({ navigate }) {
             }
             {info.reglementUrl
               ? <li><a href={info.reglementUrl} target="_blank" rel="noreferrer" className="site-footer__link">Règlement des courses</a></li>
-              : <li><button className="site-footer__link" onClick={() => navigate('courses')}>Règlement des courses</button></li>
+              : <li><a className="site-footer__link" {...spaLink('courses', navigate)}>Règlement des courses</a></li>
             }
             <li><a className="site-footer__link" {...spaLink('contact', navigate)}>Nous contacter</a></li>
           </ul>
@@ -316,23 +306,27 @@ function App() {
     document.body.style.overflow = menuOpen ? 'hidden' : '';
     return ()=>{ document.body.style.overflow = ''; };
   },[menuOpen]);
+  // Titres alignés sur ceux du serveur (PageController::buildSeo) : la page d'arrivée garde
+  // exactement le <title> envoyé par le serveur, les suivantes (navigation SPA) prennent le même format.
+  const initialPage = useRef(page);
   useEffect(()=>{
+    if (page === initialPage.current && SEO_BASE.title) { document.title = SEO_BASE.title; return; }
+    const Y = EVENT_YEAR;
     const titles = {
-      accueil:     SEO_BASE.title || `Aux Õrigines – Trail Nature – Sernhac ${EVENT_YEAR}`,
-      evenement:   `L'Événement – Aux Õrigines ${EVENT_YEAR}`,
-      courses:     `Les Courses – Aux Õrigines ${EVENT_YEAR}`,
-      vallon:      `Le Vallon de Sernhac – Aux Õrigines ${EVENT_YEAR}`,
-      artisans:    `Marché d'Artisans – Aux Õrigines ${EVENT_YEAR}`,
-      benevoles:   `Bénévoles – Aux Õrigines ${EVENT_YEAR}`,
-      galerie:     `Galerie – Aux Õrigines ${EVENT_YEAR}`,
-      partenaires: `Partenaires – Aux Õrigines ${EVENT_YEAR}`,
-      actualites:  `Actualités – Aux Õrigines ${EVENT_YEAR}`,
-      contact:     `Contact – Aux Õrigines ${EVENT_YEAR}`,
+      accueil:     `Aux õrigines – Trail & Nature au Vallon de Sernhac ${Y}`,
+      evenement:   `L'Événement – Programme & Ambiance – Aux õrigines ${Y}`,
+      courses:     `Les Courses de Trail – Aux õrigines ${Y}`,
+      vallon:      `Le Vallon de Sernhac – Aux õrigines ${Y}`,
+      artisans:    `Marché d'Artisans – Aux õrigines ${Y}`,
+      benevoles:   `Devenir Bénévole – Aux õrigines ${Y}`,
+      galerie:     `Galerie Photos & Vidéos – Aux õrigines ${Y}`,
+      partenaires: `Nos Partenaires – Aux õrigines ${Y}`,
+      actualites:  `Actualités – Aux õrigines ${Y}`,
+      contact:     `Contact – Aux õrigines ${Y}`,
     };
     if (page.startsWith('course/')) {
-      const slug = page.slice(7);
-      const race = RACES.find(r => r.urlSlug === slug);
-      document.title = race ? `${race.name} – Aux Õrigines ${EVENT_YEAR}` : titles.accueil;
+      const race = RACES.find(r => r.urlSlug === page.slice(7));
+      document.title = race ? `${[race.name.trim(), race.distance].filter(Boolean).join(' – ')} – Aux õrigines ${Y}` : titles.accueil;
     } else {
       document.title = titles[page] || titles.accueil;
     }
@@ -366,7 +360,9 @@ function App() {
           exit={{opacity:0, y:-10}}
           transition={{duration:0.32, ease:'easeOut'}}
         >
-          <Suspense fallback={<div style={{minHeight:'60vh'}}/>}>
+          {/* Footer DANS le Suspense : affiché seulement une fois la page chargée. S'il était dessous,
+              il apparaissait à l'écran pendant le chargement puis sautait vers le bas (CLS 0,4 sur mobile). */}
+          <Suspense fallback={<div style={{minHeight:'min(100vh, 1400px)'}}/>}>
             {page==='accueil'          && <LazyPageAccueil     navigate={navigate}/>}
             {page==='evenement'        && <LazyPageEvenement   navigate={navigate}/>}
             {page==='courses'          && <LazyPageCourses     navigate={navigate}/>}
@@ -378,8 +374,8 @@ function App() {
             {page==='galerie'          && <LazyPageGalerie     navigate={navigate}/>}
             {page==='actualites'       && <LazyPageActualites  navigate={navigate}/>}
             {page==='contact'          && <LazyPageContact     navigate={navigate}/>}
+            <Footer navigate={navigate}/>
           </Suspense>
-          <Footer navigate={navigate}/>
         </motion.div>
       </AnimatePresence>
       {consent === null && <CookieBanner onAccept={accept} onRefuse={refuse}/>}

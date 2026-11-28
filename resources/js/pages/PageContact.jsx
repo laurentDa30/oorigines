@@ -44,7 +44,7 @@ export default function PageContact({ navigate }) {
     <>
       <div className="wrap" style={{paddingTop:164}}>
         <div className="sec-tag">Nous écrire</div>
-        <h2 className="sec-title">Nous <em>Contacter</em></h2>
+        <h1 className="sec-title">Nous <em>Contacter</em></h1>
         <div className="sec-rule"/>
         <div className="contact-grid">
           {sent?(
@@ -59,7 +59,7 @@ export default function PageContact({ navigate }) {
             <div className="cf">
               {field('nom','Votre nom')}
               {field('email','Votre adresse email')}
-              <select value={form.sujet} onChange={ev=>setForm(f=>({...f,sujet:ev.target.value}))} style={{width:'100%',padding:'13px 16px',border:'1px solid var(--stone)',background:'white',fontFamily:"'EB Garamond',serif",fontSize:16,color:'var(--dark)',marginBottom:14,outline:'none',appearance:'none'}}>
+              <select aria-label="Sujet du message" value={form.sujet} onChange={ev=>setForm(f=>({...f,sujet:ev.target.value}))} style={{width:'100%',padding:'13px 16px',border:'1px solid var(--stone)',background:'white',fontFamily:"'EB Garamond',serif",fontSize:16,color:'var(--dark)',marginBottom:14,outline:'none',appearance:'none'}}>
                 <option value="contact">Contact général</option>
                 <option value="artisan">Réserver un emplacement</option>
                 <option value="partenaire">Devenir partenaire</option>

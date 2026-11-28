@@ -4,8 +4,7 @@ import {
   GALERIE, ACTUALITES, ARTISAN_COUNT, RACES, RACES_KM,
   EVENT_DATE, EVENT_DATE_COURT, EVENT_DATE_CAP,
   INSCRIPTIONS, INSCRIPTIONS_OUVERTES, INSCRIPTIONS_TEXTE,
-  Partners, CountdownRow, YoutubeEmbed,
-} from '../shared';
+  Partners, CountdownRow, YoutubeEmbed, spaLink } from '../shared';
 
 function SectionVideo() {
   const video = GALERIE.find(g => g.video_accueil && g.url_video);
@@ -122,7 +121,7 @@ function SectionGalerieHome({ navigate }) {
               ))}
             </div>
             <div style={{textAlign:'center'}}>
-              <button className="btn-primary" onClick={()=>navigate('galerie')}>Voir toute la galerie →</button>
+              <a className="btn-primary" {...spaLink('galerie', navigate)}>Voir toute la galerie →</a>
             </div>
           </>
         ) : (
@@ -136,7 +135,7 @@ function SectionGalerieHome({ navigate }) {
               </div>
             </div>
             <div style={{textAlign:'center'}}>
-              <button className="btn-primary" onClick={()=>navigate('galerie')}>Voir toute la galerie →</button>
+              <a className="btn-primary" {...spaLink('galerie', navigate)}>Voir toute la galerie →</a>
             </div>
           </>
         )}
@@ -180,9 +179,9 @@ function SectionActualites({ navigate }) {
         </div>
         {ACTUALITES.length > 0 && navigate && (
           <div style={{textAlign:'center',marginTop:40}}>
-            <button className="btn-primary" onClick={()=>navigate('actualites')}>
+            <a className="btn-primary" {...spaLink('actualites', navigate)}>
               Toutes les actualités →
-            </button>
+            </a>
           </div>
         )}
       </div>
@@ -272,8 +271,8 @@ export default function PageAccueil({ navigate }) {
             <div className="hero-date-item"><span className="hero-date-val">Trail / Marche</span><span className="hero-date-lbl">{RACES_KM.join(' - ')}</span></div>
           </div>
           <div className="hero-actions">
-            <button className="btn-primary" onClick={()=>navigate('courses')}>Découvrir les courses</button>
-            <button className="btn-ghost"   onClick={()=>navigate('evenement')}>Découvrir l'événement</button>
+            <a className="btn-primary" {...spaLink('courses', navigate)}>Découvrir les courses</a>
+            <a className="btn-ghost" {...spaLink('evenement', navigate)}>Découvrir l'événement</a>
           </div>
         </motion.div>
         <div className="hero-scroll" style={{zIndex:8}}><div className="scroll-arrow"/><span>Défiler</span></div>
@@ -293,7 +292,7 @@ export default function PageAccueil({ navigate }) {
             <p className="body">Le {EVENT_DATE_COURT}, Sernhac ouvre les portes d'une expérience unique au cœur du Vallon. Dans un décor naturel exceptionnel, aux accents de l'époque romaine, coureurs et familles se retrouvent pour célébrer le sport, le terroir et l'artisanat local.</p>
             <p className="body">Une journée hors du temps, entre effort et convivialité, dans l'un des plus beaux sites naturels du Gard.</p>
             <div style={{display:'flex',gap:12,flexWrap:'wrap',marginTop:8}}>
-              <button className="btn-primary" onClick={()=>navigate('evenement')}>En savoir plus</button>
+              <a className="btn-primary" {...spaLink('evenement', navigate)}>En savoir plus</a>
             </div>
           </div>
           <div className="image-frame"><img src="/images/vallon.jpg" alt="Le Vallon de Sernhac" loading="lazy"/></div>

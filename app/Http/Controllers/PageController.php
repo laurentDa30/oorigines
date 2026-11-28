@@ -139,10 +139,18 @@ class PageController extends Controller
         $seo = $this->buildSeo($path, $settings, $courses);
         if ($seo === null) abort(404);
 
+        // Contenu de repli rendu dans #root (voir partials/seo-fallback) : page courante et course affichée.
+        $fallbackCourses = $courses->map(fn($c) => $c + ['url_slug' => $this->toUrlSlug($c['nom'])]);
+        $fallbackPage    = $path === '' ? 'accueil' : (str_starts_with($path, 'course/') ? 'course' : $path);
+        $fallbackCourse  = $fallbackPage === 'course'
+            ? $fallbackCourses->firstWhere('url_slug', substr($path, 7))
+            : null;
+
         return view('app', compact(
             'settings', 'siteOpen', 'artisanCount', 'partenaires', 'artisans',
             'galerie', 'siteInfo', 'courses', 'actualites', 'seo', 'announce',
-            'programme', 'sections', 'inscriptions'
+            'programme', 'sections', 'inscriptions',
+            'fallbackCourses', 'fallbackPage', 'fallbackCourse'
         ));
     }
 

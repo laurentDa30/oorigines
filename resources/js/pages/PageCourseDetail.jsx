@@ -1,7 +1,7 @@
 import React from 'react';
-import { Partners, INSCRIPTIONS, INSCRIPTIONS_OUVERTES, INSCRIPTIONS_TEXTE } from '../shared';
+import { Partners, INSCRIPTIONS, INSCRIPTIONS_OUVERTES, INSCRIPTIONS_TEXTE, spaLink } from '../shared';
 
-function ProfilSVG({ points, color }) {
+function ProfilSVG({ points, color, denivele }) {
   const W=560,H=140,pad=20;
   const xs=points.map(p=>p[0]),ys=points.map(p=>p[1]);
   const maxX=Math.max(...xs),maxY=Math.max(...ys)||1;
@@ -16,7 +16,7 @@ function ProfilSVG({ points, color }) {
       <polygon points={fill} fill={`url(#${gId})`}/>
       <polyline points={pts} fill="none" stroke={color} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round"/>
       <text x={W-pad} y={pad+4} textAnchor="end" fontSize="11" fontFamily="'Cinzel',serif" fill={color} opacity=".9">
-        {points[points.length-1]?.[1]>0?`D+ ${Math.max(...ys)}m`:''}
+        {denivele ? `D+ ${String(denivele).replace(/^\+/, '').replace(/^(\d+)$/, '$1m')}` : ''}
       </text>
     </svg>
   );
@@ -36,7 +36,20 @@ function TraceSVG({ color }) {
   );
 }
 
+// Course enfants : boucle de 500 m, 1 à 3 tours selon l'âge, départ toutes les 15 min (plus petits d'abord).
+// Écrit en dur volontairement : à mettre à jour ici si les tranches ou les horaires changent.
+const KID_TRAIL_ID = 'trail500';
+const KID_VAGUES = [
+  { ages:'3 – 6 ans',   parcours:'1 tour · 500 m',   heure:'14h00' },
+  { ages:'7 – 9 ans',   parcours:'2 tours · 1 km',   heure:'14h15' },
+  { ages:'10 – 11 ans', parcours:'3 tours · 1,5 km', heure:'14h30' },
+];
+
 export default function PageCourseDetail({ race, navigate }) {
+  const isKid = race.id === KID_TRAIL_ID;
+  const stats = isKid
+    ? [['Distance','500 m / tour'],['Tours','1 à 3'],['Départs','14h00 – 14h30'],['Tarif',race.tarif],['Limite',race.limite]]
+    : [['Distance',race.distance],['Dénivelé',race.denivele],['Départ',race.depart],['Arrivée estimée',race.arrivee],['Tarif',race.tarif],['Limite',race.limite]];
   const CheckIcon = ()=><svg width="14" height="14" viewBox="0 0 24 24" style={{flexShrink:0,marginTop:2}} fill={race.color}><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>;
   const DotIcon   = ()=><svg width="10" height="10" viewBox="0 0 10 10" style={{flexShrink:0,marginTop:4}} fill={race.color}><circle cx="5" cy="5" r="4"/></svg>;
   return (
@@ -44,10 +57,10 @@ export default function PageCourseDetail({ race, navigate }) {
       <div style={{background:'var(--dark2)',paddingTop:'calc(112px + var(--ann-h,0px))',paddingBottom:0,position:'relative',overflow:'hidden'}}>
         <div style={{position:'absolute',inset:0,backgroundImage:"url('/images/hero.jpg')",backgroundSize:'cover',backgroundPosition:'center 40%',opacity:.18}}/>
         <div style={{position:'relative',maxWidth:1160,margin:'0 auto',padding:'clamp(28px,4vw,48px) clamp(20px,4vw,48px) 0'}}>
-          <button onClick={()=>navigate('courses')} style={{fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:'.3em',textTransform:'uppercase',color:'oklch(95% 0.012 68)',background:'none',border:'none',cursor:'pointer',marginBottom:24,display:'flex',alignItems:'center',gap:8}}>
+          <a {...spaLink('courses', navigate)} style={{textDecoration:'none',width:'fit-content',fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:'.3em',textTransform:'uppercase',color:'oklch(95% 0.012 68)',cursor:'pointer',marginBottom:24,display:'flex',alignItems:'center',gap:8}}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
             Toutes les courses
-          </button>
+          </a>
           <div style={{display:'flex',alignItems:'flex-end',justifyContent:'space-between',flexWrap:'wrap',gap:24,paddingBottom:48}}>
             <div>
               <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12,flexWrap:'wrap'}}>
@@ -62,7 +75,7 @@ export default function PageCourseDetail({ race, navigate }) {
         </div>
         <div style={{background:'oklch(12% .03 38 / .85)',borderTop:'1px solid oklch(25% .04 38)'}}>
           <div style={{maxWidth:1160,margin:'0 auto',padding:'0 clamp(20px,4vw,48px)',display:'flex',flexWrap:'wrap'}}>
-            {[['Distance',race.distance],['Dénivelé',race.denivele],['Départ',race.depart],['Arrivée estimée',race.arrivee],['Tarif',race.tarif],['Limite',race.limite]].map(([l,v])=>(
+            {stats.filter(([,v])=>v).map(([l,v])=>(
               <div key={l} style={{padding:'18px 28px 18px 0',marginRight:28,borderRight:'1px solid oklch(25% .04 38)',display:'flex',flexDirection:'column',gap:4}}>
                 <div style={{fontFamily:"'Cinzel',serif",fontSize:9,letterSpacing:'.3em',textTransform:'uppercase',color:'white'}}>{l}</div>
                 <div style={{fontFamily:"'Cinzel',serif",fontSize:15,fontWeight:700,color:'white'}}>{v}</div>
@@ -84,20 +97,38 @@ export default function PageCourseDetail({ race, navigate }) {
                 {race.ravito.map((r,i)=><div key={i} style={{display:'flex',alignItems:'center',gap:10,marginBottom:8,fontFamily:"'EB Garamond',serif",fontSize:16,color:'oklch(22% .04 38)'}}><DotIcon/>{r}</div>)}
               </div>
             )}
-            <div style={{marginTop:32}}>
+            {!isKid&&<div style={{marginTop:32}}>
               <div className="sec-tag">Profil</div>
               <div style={{background:'white',border:'1px solid var(--stone)',padding:'16px 16px 8px'}}>
-                <ProfilSVG points={race.profil} color={race.color}/>
+                <ProfilSVG points={race.profil} color={race.color} denivele={race.denivele}/>
                 <div style={{display:'flex',justifyContent:'space-between',paddingTop:4}}>
                   <span style={{fontFamily:"'Cinzel',serif",fontSize:9,letterSpacing:'.2em',color:'var(--stone)'}}>Départ</span>
                   <span style={{fontFamily:"'Cinzel',serif",fontSize:9,letterSpacing:'.2em',color:'var(--stone)'}}>Arrivée</span>
                 </div>
               </div>
-            </div>
+            </div>}
           </div>
           <div>
-            <div className="sec-tag">Trace du parcours</div>
-            <div style={{background:'white',border:'1px solid var(--stone)',padding:8}}><TraceSVG color={race.color}/></div>
+            {isKid ? (
+              <>
+                <div className="sec-tag">Selon l'âge</div>
+                <div style={{background:'white',borderTop:'3px solid '+race.color,padding:'4px 24px'}}>
+                  {KID_VAGUES.map((v,i)=>(
+                    <div key={v.ages} style={{display:'grid',gridTemplateColumns:'1.2fr 1.4fr auto',gap:12,alignItems:'baseline',padding:'14px 0',borderTop:i?'1px solid var(--stone)':'none'}}>
+                      <span style={{fontFamily:"'Cinzel',serif",fontSize:13,fontWeight:700,letterSpacing:'.06em',color:'oklch(22% .04 38)'}}>{v.ages}</span>
+                      <span style={{fontFamily:"'EB Garamond',serif",fontSize:16,color:'oklch(30% .04 38)'}}>{v.parcours}</span>
+                      <span style={{fontFamily:"'Cinzel',serif",fontSize:14,fontWeight:700,color:race.color}}>{v.heure}</span>
+                    </div>
+                  ))}
+                </div>
+                <p style={{fontFamily:"'EB Garamond',serif",fontSize:15,fontStyle:'italic',color:'oklch(42% .04 38)',marginTop:10}}>Un départ toutes les 15 minutes, des plus petits aux plus grands.</p>
+              </>
+            ) : (
+              <>
+                <div className="sec-tag">Trace du parcours</div>
+                <div style={{background:'white',border:'1px solid var(--stone)',padding:8}}><TraceSVG color={race.color}/></div>
+              </>
+            )}
             <div style={{marginTop:36}}>
               <div className="sec-tag">Équipement obligatoire</div>
               <div style={{background:'white',borderTop:'3px solid '+race.color,padding:'20px 24px',marginBottom:16}}>
@@ -138,7 +169,7 @@ export default function PageCourseDetail({ race, navigate }) {
             ) : (
               <button className="btn-primary" disabled style={{opacity:.6,cursor:'not-allowed'}}>Inscriptions bientôt disponibles</button>
             )}
-            <button className="btn-ghost" onClick={()=>navigate('contact')}>Être notifié</button>
+            <a className="btn-ghost" {...spaLink('contact', navigate)}>Être notifié</a>
           </div>
         </div>
       </div>

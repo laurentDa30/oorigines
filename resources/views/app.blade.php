@@ -61,7 +61,6 @@
     $eventDay  = $settings->date_evenement?->format('Y-m-d') ?? '2027-04-24';
     $eventAt   = fn (string $heure) => \Carbon\Carbon::parse($eventDay.' '.$heure, 'Europe/Paris')->format('c');
     $eventIso  = $eventAt($settings->date_evenement?->format('H:i') ?? '08:00');
-    $eventEnd  = $eventAt('20:00');
     $siteUrl   = rtrim(config('app.url'), '/');
     $eventImg  = $siteUrl.'/images/hero.jpg';
     $location = [
@@ -88,22 +87,42 @@
     };
     // Heure de départ saisie « 15h00 », « 14h », « 15h45 » → « 15:00 ».
     $heureDe = fn (?string $h) => ($h && preg_match('/(\d{1,2})\s*h\s*(\d{2})?/i', $h, $m)) ? sprintf('%02d:%02d', $m[1], $m[2] ?? 0) : null;
+    // Heure de fin : la DERNIÈRE heure du texte (« 11h30 – 13h15 » → « 13:15 »).
+    $finDe = function (?string $h) {
+      if (!$h || !preg_match_all('/(\d{1,2})\s*h\s*(\d{2})?/i', $h, $m, PREG_SET_ORDER)) return null;
+      $d = end($m);
+      return sprintf('%02d:%02d', $d[1], ($d[2] ?? '') !== '' ? $d[2] : 0);
+    };
+    // Fin de la course : son heure d'arrivée affichée, si elle suit le départ. Jamais d'heure inventée.
+    $finCourse = function ($c) use ($heureDe, $finDe, $settings) {
+      $fin = $finDe($c['heure_arrivee'] ?? null);
+      $debut = $heureDe($c['heure_depart'] ?? null) ?? ($settings->date_evenement?->format('H:i') ?? '08:00');
+      return ($fin && $fin > $debut) ? $fin : null;
+    };
+    // Fin de l'événement : dernière heure affichée (arrivées des courses + programme s'il est visible).
+    $heuresFin = $courses->map($finCourse)->filter();
+    if ($settings->programme_actif) {
+      $heuresFin = $heuresFin->merge(collect($settings->programme ?? [])->map(fn ($r) => $finDe($r['heure'] ?? null))->filter());
+    }
+    $finEvenement = $heuresFin->max();
+    $eventEnd = ($finEvenement && $finEvenement > ($settings->date_evenement?->format('H:i') ?? '08:00')) ? $eventAt($finEvenement) : null;
     // Dates saisies en heure locale (stockées sans fuseau) → réinterprétées en Europe/Paris.
     $offerValidFrom = ($settings->inscriptions_date_ouverture ?? $settings->date_ouverture_site)?->shiftTimezone('Europe/Paris')->format('c') ?? now()->format('c');
-    $coursesList = $courses->map(function ($c) use ($siteUrl, $eventAt, $eventIso, $eventEnd, $eventImg, $location, $organizer, $offerValidFrom, $prixDe, $heureDe, $availability, $inscOuvertes, $inscriptions) {
+    $coursesList = $courses->map(function ($c) use ($siteUrl, $eventAt, $eventIso, $finCourse, $eventImg, $location, $organizer, $offerValidFrom, $prixDe, $heureDe, $availability, $inscOuvertes, $inscriptions) {
       // Même slug que SitemapController::toUrlSlug (trim des tirets inclus).
       $url   = $siteUrl.'/course/'.trim(preg_replace('/[^a-z0-9]+/', '-', mb_strtolower(strtr($c['nom'], ['à'=>'a','â'=>'a','ä'=>'a','é'=>'e','è'=>'e','ê'=>'e','ë'=>'e','î'=>'i','ï'=>'i','ô'=>'o','ö'=>'o','ù'=>'u','û'=>'u','ü'=>'u','ç'=>'c','õ'=>'o']))), '-');
       $heure = $heureDe($c['heure_depart'] ?? null);
       $prix  = $prixDe($c['tarif'] ?? null);
+      $fin   = $finCourse($c);
       $offer = ['@type' => 'Offer', 'url' => $inscOuvertes ? $inscriptions['url'] : $url, 'availability' => $availability, 'priceCurrency' => 'EUR', 'validFrom' => $offerValidFrom];
       if ($prix !== null) $offer['price'] = $prix;
-      return [
+      return array_filter([
         '@type'       => 'Event',
         'name'        => trim($c['nom']),
         'description' => $c['tagline'] ?? '',
         'image'       => $eventImg,
         'startDate'   => $heure ? $eventAt($heure) : $eventIso,
-        'endDate'     => $eventEnd,
+        'endDate'     => $fin ? $eventAt($fin) : null,
         'eventStatus' => 'https://schema.org/EventScheduled',
         'eventAttendanceMode' => 'https://schema.org/OfflineEventAttendanceMode',
         'location'    => $location,
@@ -111,9 +130,9 @@
         'performer'   => ['@type' => 'PerformingGroup', 'name' => 'Participants '.trim($c['nom'])],
         'offers'      => $offer,
         'url'         => $url,
-      ];
+      ], fn ($v) => $v !== null);
     })->values()->all();
-    $jsonLd = [
+    $jsonLd = array_filter([
       '@context'    => 'https://schema.org',
       '@type'       => 'SportsEvent',
       'name'        => 'Aux õrigines',
@@ -130,7 +149,7 @@
       'performer'   => ['@type' => 'PerformingGroup', 'name' => 'Coureurs et marcheurs Aux õrigines'],
       'offers'      => ['@type' => 'AggregateOffer', 'url' => $inscOuvertes ? $inscriptions['url'] : $siteUrl.'/courses', 'availability' => $availability, 'priceCurrency' => 'EUR', 'lowPrice' => '0', 'validFrom' => $offerValidFrom],
       'subEvent' => $coursesList,
-    ];
+    ], fn ($v) => $v !== null);
   @endphp
   <script type="application/ld+json" @if(!empty($cspNonce))nonce="{{ $cspNonce }}"@endif>{!! json_encode($jsonLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_PRETTY_PRINT) !!}</script>
   @if(!empty($seo['jsonld_extra']))
@@ -138,47 +157,7 @@
   @endif
 </head>
 <body>
-  <div id="root"></div>
-  <noscript>
-    <main style="font-family:Georgia,serif;max-width:800px;margin:40px auto;padding:0 24px;color:#1a1208">
-      <h1>Aux õrigines – Trail &amp; Nature – Sernhac {{ $settings->date_evenement?->format('Y') ?? '2027' }}</h1>
-      <p>{{ $seo['description'] }}</p>
-
-      <h2>L'Événement</h2>
-      <p>Aux Õrigines est un événement sportif et culturel organisé au cœur du Vallon de Sernhac (Gard). Ce site naturel exceptionnel, traversé par l'aqueduc romain de Nîmes, accueille coureurs, randonneurs et familles pour une journée alliant sport, nature et retour aux sources.</p>
-      <h3>Le Vallon de Sernhac</h3>
-      <p>Niché dans le Gard, le Vallon de Sernhac est un écrin de nature sauvage avec ses garrigues, falaises calcaires et sentiers romains. Un cadre d'exception pour un événement trail hors du commun.</p>
-
-      <h2>Les Courses</h2>
-      @php $nbCourses = $courses->count(); @endphp
-      <p>{{ $nbCourses > 1 ? $nbCourses.' épreuves' : ($nbCourses === 1 ? 'Une épreuve' : 'Des épreuves') }} pour tous les niveaux, du trail technique au parcours enfants :</p>
-      <ul>
-        @foreach($courses as $course)
-          <li>
-            <strong>{{ trim($course['nom']) }}</strong> – {{ $course['distance_affichee'] }}
-            @if($course['tagline']) – {{ $course['tagline'] }} @endif
-            @if($course['denivele']) ({{ $course['denivele'] }}) @endif
-          </li>
-        @endforeach
-      </ul>
-      <h3>Inscriptions et tarifs</h3>
-      @if($inscriptions['actif'])
-        <p>Les inscriptions sont ouvertes : <a href="{{ $inscriptions['url'] }}">s'inscrire en ligne</a>. Consultez la page des courses pour les tarifs et conditions de participation.</p>
-      @else
-        <p>Les inscriptions ouvriront {{ $inscriptions['date_label'] ? 'le '.$inscriptions['date_label'] : 'prochainement' }}. Consultez la page des courses pour les tarifs et conditions de participation.</p>
-      @endif
-
-      <h2>Marché d'Artisans</h2>
-      <p>Un marché artisanal authentique réunit créateurs, producteurs locaux et artisans du Gard au village départ. Terroir, savoir-faire et convivialité au rendez-vous.</p>
-
-      <h2>Informations pratiques</h2>
-      <h3>Lieu</h3>
-      <p>Vallon de Sernhac, Sernhac (30210), Gard, France.</p>
-      <h3>Contact</h3>
-      <p>Pour toute question, rendez-vous sur <a href="{{ rtrim(config('app.url'),'/') }}/contact">la page contact</a>.</p>
-      <p><em>Ce site nécessite JavaScript pour s'afficher correctement.</em></p>
-    </main>
-  </noscript>
+  <div id="root">@include('partials.seo-fallback')</div><!-- /root -->
   @php
     // Flags d'échappement pour toute donnée injectée dans un <script> inline :
     // neutralise </script>, &, ', " → aucune évasion possible du contexte script.

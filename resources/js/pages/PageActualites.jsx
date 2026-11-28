@@ -20,13 +20,13 @@ export default function PageActualites({ navigate }) {
     return (
       <>
         <div className="wrap" style={{paddingTop:164}}>
-          <button onClick={()=>setSelected(null)} style={{fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:'.3em',textTransform:'uppercase',color:'var(--stone)',background:'none',border:'none',cursor:'pointer',marginBottom:36,display:'flex',alignItems:'center',gap:8,padding:0}}>
+          <button onClick={()=>setSelected(null)} style={{fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:'.3em',textTransform:'uppercase',color:'var(--stone-texte)',background:'none',border:'none',cursor:'pointer',marginBottom:36,display:'flex',alignItems:'center',gap:8,padding:0}}>
             ← Toutes les actualités
           </button>
 
           <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:18}}>
             <span style={{fontFamily:"'Cinzel',serif",fontSize:9,letterSpacing:'.25em',textTransform:'uppercase',color:'white',background:'var(--tc)',padding:'4px 12px',borderRadius:2}}>{a.categorie}</span>
-            {a.date_label && <span style={{fontFamily:"'EB Garamond',serif",fontSize:15,color:'var(--stone)',fontStyle:'italic'}}>{a.date_label}</span>}
+            {a.date_label && <span style={{fontFamily:"'EB Garamond',serif",fontSize:15,color:'var(--stone-texte)',fontStyle:'italic'}}>{a.date_label}</span>}
           </div>
           <h1 style={{fontFamily:"'Cinzel',serif",fontSize:'clamp(22px,3.5vw,40px)',fontWeight:900,color:'var(--dark)',lineHeight:1.2,marginBottom:20}}>{a.titre}</h1>
           <div className="sec-rule" style={{marginBottom:28}}/>
@@ -36,7 +36,7 @@ export default function PageActualites({ navigate }) {
             {a.extrait && <p style={{fontFamily:"'EB Garamond',serif",fontSize:'clamp(17px,1.3vw,20px)',lineHeight:1.8,color:'oklch(35% .04 38)',marginBottom:28,fontStyle:'italic'}}>{a.extrait}</p>}
             {a.contenu
               ? <div className="actu-body" dangerouslySetInnerHTML={{__html:DOMPurify.sanitize(a.contenu)}}/>
-              : <p style={{fontFamily:"'EB Garamond',serif",fontSize:17,color:'var(--stone)',fontStyle:'italic'}}>Contenu complet à venir…</p>
+              : <p style={{fontFamily:"'EB Garamond',serif",fontSize:17,color:'var(--stone-texte)',fontStyle:'italic'}}>Contenu complet à venir…</p>
             }
           </div>
 
@@ -81,10 +81,10 @@ export default function PageActualites({ navigate }) {
     <>
       <div className="wrap" style={{paddingTop:164}}>
         <div className="sec-tag">Dernières nouvelles</div>
-        <h2 className="sec-title">Toutes les <em>Actualités</em></h2>
+        <h1 className="sec-title">Toutes les <em>Actualités</em></h1>
         <div className="sec-rule"/>
         {!ACTUALITES.length && (
-          <p style={{fontFamily:"'EB Garamond',serif",fontSize:18,color:'var(--stone)',fontStyle:'italic',padding:'48px 0'}}>
+          <p style={{fontFamily:"'EB Garamond',serif",fontSize:18,color:'var(--stone-texte)',fontStyle:'italic',padding:'48px 0'}}>
             Aucune actualité pour le moment. Revenez bientôt !
           </p>
         )}
@@ -97,7 +97,7 @@ export default function PageActualites({ navigate }) {
               {a.image && <img src={a.image} alt="" loading="lazy" style={{display:'block',width:'calc(100% + 56px)',margin:'-28px -28px 20px',height:180,objectFit:'cover'}}/>}
               <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14}}>
                 <span style={{fontFamily:"'Cinzel',serif",fontSize:9,letterSpacing:'.25em',textTransform:'uppercase',color:'white',background:'var(--tc)',padding:'3px 10px',borderRadius:2}}>{a.categorie}</span>
-                {a.date_label && <span style={{fontFamily:"'EB Garamond',serif",fontSize:14,color:'var(--stone)',fontStyle:'italic'}}>{a.date_label}</span>}
+                {a.date_label && <span style={{fontFamily:"'EB Garamond',serif",fontSize:14,color:'var(--stone-texte)',fontStyle:'italic'}}>{a.date_label}</span>}
               </div>
               <h3 style={{fontFamily:"'Cinzel',serif",fontSize:'clamp(15px,1.5vw,18px)',fontWeight:700,color:'var(--dark)',lineHeight:1.35,marginBottom:12}}>{a.titre}</h3>
               <div style={{height:1,background:'var(--stone)',margin:'12px 0',opacity:.4}}/>

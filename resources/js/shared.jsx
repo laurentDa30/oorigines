@@ -43,6 +43,18 @@ export function toUrlSlug(str) {
     .replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 }
 
+/* ── Liens internes : vrais <a href> (suivables par Google), navigation SPA au clic simple ── */
+export const pathOf = p => p==='accueil' ? '/' : '/'+p;
+export const spaLink = (p, go) => ({
+  href: pathOf(p),
+  onClick: e => {
+    e.stopPropagation();
+    if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || e.button !== 0) return;
+    e.preventDefault();
+    go(p);
+  },
+});
+
 export const PAGES = ['accueil','evenement','courses','vallon','artisans','benevoles','galerie','partenaires','contact','actualites'];
 export function pageFromPath() {
   const p = window.location.pathname.replace(/^\//, '') || 'accueil';
@@ -132,9 +144,9 @@ export function Partners({ navigate }) {
             : <div key={p.id} className="partner-box">{inner}</div>;
         })}
         {navigate && (
-          <div className="partner-box partner-box--join" onClick={()=>navigate('partenaires')}>
-            <span style={{fontFamily:"'Cinzel',serif",fontSize:8,letterSpacing:'.2em',textTransform:'uppercase',color:'var(--ocre)',whiteSpace:'nowrap'}}>Nous rejoindre →</span>
-          </div>
+          <a className="partner-box partner-box--join" {...spaLink('partenaires', navigate)}>
+            <span style={{fontFamily:"'Cinzel',serif",fontSize:8,letterSpacing:'.2em',textTransform:'uppercase',color:'var(--ocre-texte)',whiteSpace:'nowrap'}}>Nous rejoindre →</span>
+          </a>
         )}
       </div>
     </div>

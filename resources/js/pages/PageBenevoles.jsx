@@ -62,7 +62,7 @@ export default function PageBenevoles({ navigate }) {
     <>
       <div className="wrap" style={{ paddingTop: 164 }}>
         <div className="sec-tag">Rejoignez l'équipe</div>
-        <h2 className="sec-title">Devenir <em>Bénévole</em></h2>
+        <h1 className="sec-title">Devenir <em>Bénévole</em></h1>
         <div className="sec-rule" />
 
         <div className="split" style={{ marginBottom: 48, alignItems: 'center' }}>
@@ -151,7 +151,7 @@ export default function PageBenevoles({ navigate }) {
                         <input type="checkbox" checked={checked} onChange={() => toggleCreneau(c.id)} style={{ marginTop: 4, accentColor: 'var(--tc)', flexShrink: 0 }} />
                         <div>
                           <span style={{ fontFamily: "'Cinzel',serif", fontSize: 11, letterSpacing: '.15em', textTransform: 'uppercase', color: 'var(--dark)' }}>{c.label}</span>
-                          <span style={{ fontFamily: "'Cinzel',serif", fontSize: 9, letterSpacing: '.1em', color: 'var(--tc)', marginLeft: 8 }}>{c.detail}</span>
+                          <span style={{ fontFamily: "'Cinzel',serif", fontSize: 9, letterSpacing: '.1em', color: 'var(--tc2)', marginLeft: 8 }}>{c.detail}</span>
                           <div style={{ fontSize: 13, color: 'oklch(50% .04 68)', marginTop: 2 }}>{c.desc}</div>
                         </div>
                       </label>
@@ -161,7 +161,7 @@ export default function PageBenevoles({ navigate }) {
                 {errors.creneaux && <span className="error-msg" style={{ marginTop: 6, display: 'block' }}>{errors.creneaux}</span>}
               </div>
 
-              <select value={form.mission} onChange={ev => setForm(f => ({ ...f, mission: ev.target.value }))} style={{ marginBottom: 14 }}>
+              <select aria-label="Préférence de mission" value={form.mission} onChange={ev => setForm(f => ({ ...f, mission: ev.target.value }))} style={{ marginBottom: 14 }}>
                 <option value="">Préférence de mission (optionnel)</option>
                 <option value="Accueil & enregistrement">Accueil & enregistrement (dossards, inscriptions)</option>
                 <option value="Balisage & signalisation">Balisage & signalisation</option>
@@ -210,7 +210,7 @@ export default function PageBenevoles({ navigate }) {
               <p style={{ fontSize: 14, color: 'oklch(45% .04 68)', lineHeight: 1.7, margin: '0 0 8px' }}>
                 Repas offert sur place, dossard souvenir de l'édition et la fierté d'avoir contribué à quelque chose d'unique
               </p>
-              <p style={{ fontSize: 13, color: 'oklch(55% .04 68)', fontStyle: 'italic', margin: 0 }}>
+              <p style={{ fontSize: 13, color: 'var(--stone-texte)', fontStyle: 'italic', margin: 0 }}>
                 D'autres surprises en cours de préparation, à révéler prochainement !
               </p>
             </div>

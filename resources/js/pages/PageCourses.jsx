@@ -1,17 +1,17 @@
 import React from 'react';
-import { RACES, Partners } from '../shared';
+import { RACES, Partners, spaLink } from '../shared';
 
 export default function PageCourses({ navigate }) {
   return (
     <>
       <div className="wrap" style={{paddingTop:164}}>
         <div className="sec-tag">Les Épreuves</div>
-        <h2 className="sec-title">Les <em>Courses</em></h2>
+        <h1 className="sec-title">Les <em>Courses</em></h1>
         <div className="sec-rule"/>
         <p className="body" style={{maxWidth:580}}>{RACES.length > 0 ? `${['Une','Deux','Trois','Quatre','Cinq','Six'][RACES.length-1]||RACES.length} épreuve${RACES.length>1?'s':''}` : 'Des épreuves'} pour tous les niveaux, dans un cadre naturel exceptionnel marqué par l'histoire romaine du Vallon de Sernhac. Cliquez sur une course pour voir le détail.</p>
         <div className="race-grid">
           {RACES.map(r=>(
-            <div key={r.id} className="race-card" onClick={()=>navigate('course/'+r.urlSlug)} style={{cursor:'pointer'}}>
+            <a key={r.id} className="race-card" {...spaLink('course/'+r.urlSlug, navigate)}>
               <div style={{position:'absolute',top:0,left:0,width:3,height:'100%',background:r.color}}/>
               {r.dist?<div className="race-dist" style={{color:r.color}}>{r.dist}<sup>{r.unit}</sup></div>:<div className="race-bar" style={{background:r.color}}/>}
               <div className="race-name">{r.name}</div>
@@ -24,14 +24,14 @@ export default function PageCourses({ navigate }) {
               <div style={{marginTop:12,fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:'.25em',textTransform:'uppercase',color:r.color,display:'flex',alignItems:'center',gap:6}}>
                 Voir le détail <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
               </div>
-            </div>
+            </a>
           ))}
         </div>
       </div>
 
       <div className="wrap" style={{paddingTop:8,paddingBottom:8}}>
         <div style={{background:'var(--paper)',borderLeft:'4px solid var(--tc)',padding:'clamp(24px,4vw,44px)'}}>
-          <div style={{fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:'.4em',textTransform:'uppercase',color:'var(--tc)',marginBottom:14}}>Entreprises, collectivités &amp; associations</div>
+          <div style={{fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:'.4em',textTransform:'uppercase',color:'var(--tc2)',marginBottom:14}}>Entreprises, collectivités &amp; associations</div>
           <h3 style={{fontFamily:"'Cinzel',serif",fontWeight:900,fontSize:'clamp(22px,3vw,32px)',color:'var(--dark2)',lineHeight:1.1,marginBottom:18}}>Faites courir <em>vos équipes</em></h3>
           <div className="split" style={{marginBottom:28}}>
             <div>
@@ -52,7 +52,7 @@ export default function PageCourses({ navigate }) {
               </ul>
             </div>
           </div>
-          <button className="btn-primary" onClick={()=>navigate('contact')}>Nous contacter →</button>
+          <a className="btn-primary" {...spaLink('contact', navigate)}>Nous contacter →</a>
         </div>
       </div>
 
