@@ -104,4 +104,14 @@ class SeoFallbackTest extends TestCase
         $this->assertStringNotContainsString($preload, $this->get('/vallon')->getContent());
         $this->assertStringNotContainsString($preload, $this->get('/courses')->getContent());
     }
+
+    public function test_le_repli_est_masque_au_chargement_puis_reaffiche_si_le_js_ne_demarre_pas(): void
+    {
+        $html = $this->get('/courses')->getContent();
+
+        // CSS en ligne (app.css peut échouer avec le JS) : masqué, puis visible après le délai.
+        $this->assertMatchesRegularExpression('#<style>\.seo-fb\{visibility:hidden;animation:seo-fb-show [^}]*\}@keyframes seo-fb-show\{to\{visibility:visible\}\}</style>#', $html);
+        // Sans JavaScript : affiché tout de suite.
+        $this->assertStringContainsString('<noscript><style>.seo-fb{visibility:visible;animation:none}</style></noscript>', $html);
+    }
 }

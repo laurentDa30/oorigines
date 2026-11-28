@@ -37,6 +37,12 @@
   <link rel="manifest" href="/site.webmanifest">
 
   {{-- Preloads --}}
+  {{-- Contenu de repli (#root) : masqué le temps que React le remplace, pour éviter le flash de texte brut.
+       Il réapparaît au bout de 4 s si le JS n'a pas pu s'exécuter (cas vu côté Google), et tout de suite
+       sans JavaScript. En ligne et non dans app.css, qui peut lui aussi échouer à se charger. --}}
+  <style>.seo-fb{visibility:hidden;animation:seo-fb-show 0s linear 4s forwards}@keyframes seo-fb-show{to{visibility:visible}}</style>
+  <noscript><style>.seo-fb{visibility:visible;animation:none}</style></noscript>
+
   {{-- hero.jpg n'est affiché que sur l'accueil et les fiches course : ailleurs le préchargement est du poids perdu --}}
   @if(in_array($fallbackPage ?? null, ['accueil', 'course'], true))
   <link rel="preload" as="image" href="/images/hero.jpg">
