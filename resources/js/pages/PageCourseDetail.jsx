@@ -31,7 +31,7 @@ function TraceSVG({ color }) {
         <text x="8" y="156" fontSize="9" fontFamily="'Cinzel',serif" fill={color}>D</text>
         <text x="194" y="105" fontSize="9" fontFamily="'Cinzel',serif" fill={color}>A</text>
       </svg>
-      <div style={{fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:'.3em',textTransform:'uppercase',color:'var(--stone)'}}>Trace surprise</div>
+      <div style={{fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:'.3em',textTransform:'uppercase',color:'var(--stone-texte)'}}>Trace surprise</div>
     </div>
   );
 }
@@ -102,8 +102,8 @@ export default function PageCourseDetail({ race, navigate }) {
               <div style={{background:'white',border:'1px solid var(--stone)',padding:'16px 16px 8px'}}>
                 <ProfilSVG points={race.profil} color={race.color} denivele={race.denivele}/>
                 <div style={{display:'flex',justifyContent:'space-between',paddingTop:4}}>
-                  <span style={{fontFamily:"'Cinzel',serif",fontSize:9,letterSpacing:'.2em',color:'var(--stone)'}}>Départ</span>
-                  <span style={{fontFamily:"'Cinzel',serif",fontSize:9,letterSpacing:'.2em',color:'var(--stone)'}}>Arrivée</span>
+                  <span style={{fontFamily:"'Cinzel',serif",fontSize:9,letterSpacing:'.2em',color:'var(--stone-texte)'}}>Départ</span>
+                  <span style={{fontFamily:"'Cinzel',serif",fontSize:9,letterSpacing:'.2em',color:'var(--stone-texte)'}}>Arrivée</span>
                 </div>
               </div>
             </div>}

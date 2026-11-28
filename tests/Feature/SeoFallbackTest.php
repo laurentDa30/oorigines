@@ -94,4 +94,14 @@ class SeoFallbackTest extends TestCase
 
         $this->assertDoesNotMatchRegularExpression('#<noscript>\s*<main#', $html);
     }
+
+    public function test_l_image_hero_n_est_prechargee_que_la_ou_elle_s_affiche(): void
+    {
+        $preload = '<link rel="preload" as="image" href="/images/hero.jpg">';
+
+        $this->assertStringContainsString($preload, $this->get('/')->getContent());
+        $this->assertStringContainsString($preload, $this->get('/course/astra-trail')->getContent());
+        $this->assertStringNotContainsString($preload, $this->get('/vallon')->getContent());
+        $this->assertStringNotContainsString($preload, $this->get('/courses')->getContent());
+    }
 }

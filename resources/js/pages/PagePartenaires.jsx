@@ -20,7 +20,7 @@ function PartnerInstitutionnel({ p }) {
   const inner = (
     <div className="prt-instit-item">
       {p.logo
-        ? <img src={p.logo} alt={p.nom} className="prt-instit-logo"/>
+        ? <img src={p.logo} alt="" className="prt-instit-logo"/> /* nom affiché juste à côté : alt vide pour ne pas le lire deux fois */
         : <span className="prt-instit-name">{p.nom}</span>
       }
       {p.logo && <span className="prt-instit-name">{p.nom}</span>}

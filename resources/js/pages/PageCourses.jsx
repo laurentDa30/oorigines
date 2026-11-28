@@ -10,29 +10,34 @@ export default function PageCourses({ navigate }) {
         <div className="sec-rule"/>
         <p className="body" style={{maxWidth:580}}>{RACES.length > 0 ? `${['Une','Deux','Trois','Quatre','Cinq','Six'][RACES.length-1]||RACES.length} épreuve${RACES.length>1?'s':''}` : 'Des épreuves'} pour tous les niveaux, dans un cadre naturel exceptionnel marqué par l'histoire romaine du Vallon de Sernhac. Cliquez sur une course pour voir le détail.</p>
         <div className="race-grid">
-          {RACES.map(r=>(
+          {RACES.map(r=>{
+            // Petits textes : terracotta foncé (--tc2) quand la course a la couleur par défaut, sinon
+            // contraste 4,1 sur le fond de carte (minimum 4,5). Gros chiffre et liseré gardent la couleur.
+            const petit = r.color === 'var(--tc)' ? 'var(--tc2)' : r.color;
+            return (
             <a key={r.id} className="race-card" {...spaLink('course/'+r.urlSlug, navigate)}>
               <div style={{position:'absolute',top:0,left:0,width:3,height:'100%',background:r.color}}/>
-              {r.dist?<div className="race-dist" style={{color:r.color}}>{r.dist}<sup>{r.unit}</sup></div>:<div className="race-bar" style={{background:r.color}}/>}
+              {r.dist?<div className="race-dist" style={{color:r.color}}>{r.dist}<sup style={{color:petit}}>{r.unit}</sup></div>:<div className="race-bar" style={{background:r.color}}/>}
               <div className="race-name">{r.name}</div>
               <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap',marginBottom:14}}>
                 {r.type&&<span style={{fontFamily:"'Cinzel',serif",fontSize:8,letterSpacing:'.2em',textTransform:'uppercase',background:r.color,color:'white',padding:'3px 8px'}}>{r.type}</span>}
-                <div className="race-cat" style={{color:r.color,marginBottom:0}}>{r.cat}</div>
+                <div className="race-cat" style={{color:petit,marginBottom:0}}>{r.cat}</div>
               </div>
               <div className="race-desc">{r.desc.substring(0,120)}…</div>
-              <div className="race-footer" style={{color:r.color,marginTop:'auto'}}>{r.depart} · {r.distance} · {r.denivele}</div>
-              <div style={{marginTop:12,fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:'.25em',textTransform:'uppercase',color:r.color,display:'flex',alignItems:'center',gap:6}}>
+              <div className="race-footer" style={{color:petit,marginTop:'auto'}}>{r.depart} · {r.distance} · {r.denivele}</div>
+              <div style={{marginTop:12,fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:'.25em',textTransform:'uppercase',color:petit,display:'flex',alignItems:'center',gap:6}}>
                 Voir le détail <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
               </div>
             </a>
-          ))}
+            );
+          })}
         </div>
       </div>
 
       <div className="wrap" style={{paddingTop:8,paddingBottom:8}}>
         <div style={{background:'var(--paper)',borderLeft:'4px solid var(--tc)',padding:'clamp(24px,4vw,44px)'}}>
           <div style={{fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:'.4em',textTransform:'uppercase',color:'var(--tc2)',marginBottom:14}}>Entreprises, collectivités &amp; associations</div>
-          <h3 style={{fontFamily:"'Cinzel',serif",fontWeight:900,fontSize:'clamp(22px,3vw,32px)',color:'var(--dark2)',lineHeight:1.1,marginBottom:18}}>Faites courir <em>vos équipes</em></h3>
+          <h2 style={{fontFamily:"'Cinzel',serif",fontWeight:900,fontSize:'clamp(22px,3vw,32px)',color:'var(--dark2)',lineHeight:1.1,marginBottom:18}}>Faites courir <em>vos équipes</em></h2>
           <div className="split" style={{marginBottom:28}}>
             <div>
               <p className="body">Fédérez vos collaborateurs autour d'un trail nature au cœur du Vallon de Sernhac. Nous facilitons la venue des groupes : un seul interlocuteur, une inscription centralisée et un tarif adapté à l'effectif.</p>

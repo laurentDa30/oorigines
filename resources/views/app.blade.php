@@ -37,7 +37,10 @@
   <link rel="manifest" href="/site.webmanifest">
 
   {{-- Preloads --}}
+  {{-- hero.jpg n'est affiché que sur l'accueil et les fiches course : ailleurs le préchargement est du poids perdu --}}
+  @if(in_array($fallbackPage ?? null, ['accueil', 'course'], true))
   <link rel="preload" as="image" href="/images/hero.jpg">
+  @endif
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
